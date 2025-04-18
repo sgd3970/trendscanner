@@ -1,17 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Post from '@/models/Post';
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
-export async function POST(request: Request, { params }: RouteParams) {
+export async function POST(
+  request: NextRequest,
+  context: any
+) {
   try {
     await connectDB();
-    const { id } = await params;
+    const { id } = context.params;
     const { action } = await request.json();
 
     if (!id) {
@@ -31,18 +28,16 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     if (action === 'like') {
-      post.likes = (post.likes || 0) + 1;
-    } else if (action === 'unlike') {
-      post.likes = Math.max(0, (post.likes || 0) - 1);
+      post.likes += 1;
+    } else if (action === 'unlike' && post.likes > 0) {
+      post.likes -= 1;
     }
 
     await post.save();
 
-    return NextResponse.json({
-      likes: post.likes
-    });
+    return NextResponse.json({ likes: post.likes });
   } catch (error) {
-    console.error('Error updating likes:', error);
+    console.error('좋아요 처리 오류:', error);
     return NextResponse.json(
       { error: '좋아요 처리에 실패했습니다.' },
       { status: 500 }
