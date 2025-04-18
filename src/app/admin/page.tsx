@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaNewspaper, FaComments, FaChartLine, FaMagic } from 'react-icons/fa';
 import Link from 'next/link';
-import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
 
 interface DashboardStats {
   totalPosts: number;
