@@ -1,43 +1,50 @@
-import { Suspense } from 'react';
+import { Metadata } from 'next';
 import PostDetail from '@/components/PostDetail';
 import Comments from '@/components/Comments';
 import { FaSpinner } from 'react-icons/fa';
+import { notFound } from 'next/navigation';
 
 interface PostPageProps {
-  params: {
+  params: Promise<{
     id: string;
+  }>;
+}
+
+export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}`);
+  const post = await response.json();
+
+  if (!post) {
+    return {
+      title: '포스트를 찾을 수 없습니다',
+    };
+  }
+
+  return {
+    title: post.title,
+    description: post.content.substring(0, 160),
   };
 }
 
 export default async function PostPage({ params }: PostPageProps) {
   const { id } = await params;
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}`, {
+    next: { revalidate: 60 },
+  });
 
-  if (!id) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500">포스트 ID가 필요합니다.</p>
-      </div>
-    );
+  if (!response.ok) {
+    notFound();
   }
+
+  const post = await response.json();
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Suspense fallback={
-        <div className="flex justify-center items-center min-h-[200px]">
-          <FaSpinner className="animate-spin text-4xl text-blue-500" />
-        </div>
-      }>
-        <PostDetail id={id} />
-      </Suspense>
+      <PostDetail post={post} />
       
       <div className="mt-12">
-        <Suspense fallback={
-          <div className="flex justify-center items-center min-h-[200px]">
-            <FaSpinner className="animate-spin text-4xl text-blue-500" />
-          </div>
-        }>
-          <Comments postId={id} />
-        </Suspense>
+        <Comments postId={id} />
       </div>
     </div>
   );
