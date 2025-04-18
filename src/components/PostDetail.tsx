@@ -42,7 +42,7 @@ const CustomImage: Components['img'] = (props) => {
   // 이미지 URL이 유효한지 확인
   try {
     new URL(props.src);
-  } catch (e) {
+  } catch (_) {
     console.error('Invalid image URL:', props.src);
     return null;
   }
