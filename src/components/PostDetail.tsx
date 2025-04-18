@@ -30,10 +30,21 @@ interface Post {
       url: string;
     };
   };
+  slug: string;
 }
 
 interface PostDetailProps {
-  id: string;
+  post: {
+    _id: string;
+    title: string;
+    content: string;
+    createdAt: string;
+    keywords: string[];
+    views: number;
+    likes: number;
+    imageUrl?: string;
+    slug: string;
+  };
 }
 
 const CustomImage: Components['img'] = (props) => {
@@ -83,89 +94,51 @@ const CustomParagraph: Components['p'] = ({ children }) => {
   return <p className="mb-4 text-gray-700">{children}</p>;
 };
 
-export default function PostDetail({ id }: PostDetailProps) {
-  const [post, setPost] = useState<Post | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function PostDetail({ post }: PostDetailProps) {
   const [isLiked, setIsLiked] = useState(false);
+  const [likes, setLikes] = useState(post.likes || 0);
 
   useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const response = await fetch(`/api/posts/${id}`);
-        if (!response.ok) {
-          throw new Error('포스트를 불러오는데 실패했습니다.');
-        }
-        const data = await response.json();
-        console.log('포스트 데이터:', data);  // 전체 포스트 데이터 로깅
-        console.log('이미지 URL:', data.imageUrl);  // 이미지 URL 로깅
-        setPost(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPost();
-  }, [id]);
-
-  useEffect(() => {
-    // 로컬 스토리지에서 좋아요 상태 확인
-    const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
-    setIsLiked(!!likedPosts[id]);
-  }, [id]);
+    const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
+    setIsLiked(likedPosts.includes(post._id));
+  }, [post._id]);
 
   const handleLike = async () => {
     try {
-      const response = await fetch(`/api/posts/${id}/like`, {
+      const response = await fetch(`/api/posts/${post._id}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          action: isLiked ? 'unlike' : 'like'
-        })
+          action: isLiked ? 'unlike' : 'like',
+        }),
       });
 
       if (!response.ok) {
         throw new Error('좋아요 처리에 실패했습니다.');
       }
 
-      const { likes } = await response.json();
-      
-      // 로컬 스토리지 업데이트
-      const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
-      if (isLiked) {
-        delete likedPosts[id];
-      } else {
-        likedPosts[id] = true;
-      }
-      localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
-
+      const data = await response.json();
+      setLikes(data.likes);
       setIsLiked(!isLiked);
-      if (post) {
-        setPost({
-          ...post,
-          likes: likes
-        });
+
+      const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
+      if (isLiked) {
+        localStorage.setItem(
+          'likedPosts',
+          JSON.stringify(likedPosts.filter((id: string) => id !== post._id))
+        );
+      } else {
+        localStorage.setItem(
+          'likedPosts',
+          JSON.stringify([...likedPosts, post._id])
+        );
       }
-    } catch (err) {
-      console.error('좋아요 오류:', err);
+    } catch (error) {
+      console.error('좋아요 처리 오류:', error);
     }
   };
-
-  if (loading) {
-    return <div className="text-center text-gray-600">포스트를 불러오는 중...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center">{error}</div>;
-  }
-
-  if (!post) {
-    return <div className="text-center text-gray-600">포스트를 찾을 수 없습니다.</div>;
-  }
 
   const formattedDate = formatDistanceToNow(new Date(post.createdAt), {
     addSuffix: true,
@@ -186,89 +159,54 @@ export default function PostDetail({ id }: PostDetailProps) {
             목록으로 돌아가기
           </Link>
 
-          <article className="bg-white rounded-lg shadow-sm">
-            <div className="p-8 border-b border-gray-100">
+          <article className="bg-white rounded-xl shadow-sm overflow-hidden">
+            {post.imageUrl && (
+              <div className="relative w-full h-[400px]">
+                <Image
+                  src={post.imageUrl}
+                  alt={post.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            )}
+            
+            <div className="p-6">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">{post.title}</h1>
+              
+              <div className="flex items-center text-sm text-gray-500 mb-6">
+                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                <span className="mx-2">•</span>
+                <span>{post.views || 0} views</span>
+                <span className="mx-2">•</span>
+                <button
+                  onClick={handleLike}
+                  className={`flex items-center ${
+                    isLiked ? 'text-red-500' : 'text-gray-500'
+                  }`}
+                >
+                  <FaHeart className="w-5 h-5 mr-1" />
+                  {likes}
+                </button>
+              </div>
+
               <div className="flex flex-wrap gap-2 mb-6">
                 {post.keywords?.map((keyword, index) => (
                   <span
                     key={index}
-                    className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded-full"
+                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
                   >
                     {keyword}
                   </span>
                 ))}
               </div>
 
-              <h1 className="text-3xl font-bold text-gray-900 mb-6">
-                {post.title}
-              </h1>
-
-              <div className="flex items-center justify-between text-gray-500">
-                <div className="flex items-center space-x-4">
-                  <span className="font-medium">관리자</span>
-                  <span>·</span>
-                  <span>{formattedDate}</span>
-                </div>
-                <div className="flex items-center space-x-6">
-                  <div className="flex items-center">
-                    <FaEye className="mr-1" />
-                    <span>{(post.views || 0).toLocaleString()}</span>
-                  </div>
-                  <button
-                    onClick={handleLike}
-                    className="flex items-center text-red-500 hover:text-red-600 transition-colors"
-                  >
-                    {isLiked ? <FaHeart className="mr-1" /> : <FaRegHeart className="mr-1" />}
-                    <span>{(post.likes || 0).toLocaleString()}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-8">
-              {/* 이미지 섹션 - 실제 이미지 URL이 있는 경우에만 표시 */}
-              {post.imageUrl && post.imageUrl !== '/images/default-post-image.jpg' && (
-                <div 
-                  className="relative mb-8" 
-                  id="post-image-container"
-                  style={{ width: '100%', height: '400px', position: 'relative' }}
-                >
-                  <Image
-                    src={post.imageUrl}
-                    alt={post.title}
-                    fill
-                    className="object-cover rounded-lg"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    priority={true}
-                    onError={(e) => {
-                      console.error('이미지 로드 실패:', post.imageUrl);
-                      const imgElement = e.currentTarget as HTMLImageElement;
-                      imgElement.style.display = 'none';
-                      const container = document.getElementById('post-image-container');
-                      if (container) {
-                        container.style.display = 'none';
-                      }
-                    }}
-                  />
-                </div>
-              )}
-
-              <div className="prose prose-lg max-w-none">
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    img: CustomImage,
-                    p: CustomParagraph,
-                    h2: ({ children }) => (
-                      <h2 className="text-2xl font-bold mt-8 mb-4">{children}</h2>
-                    ),
-                    h3: ({ children }) => (
-                      <h3 className="text-xl font-bold mt-6 mb-3">{children}</h3>
-                    ),
-                  }}
-                >
-                  {post.content}
-                </ReactMarkdown>
+              <div className="prose max-w-none">
+                {post.content.split('\n').map((paragraph, index) => (
+                  <p key={index} className="mb-4">
+                    {paragraph}
+                  </p>
+                ))}
               </div>
             </div>
           </article>
