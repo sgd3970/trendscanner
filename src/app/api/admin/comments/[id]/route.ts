@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Comment from '@/models/Comment';
+import { type AppRouteHandlerContext } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: AppRouteHandlerContext
 ) {
   try {
     await connectDB();
 
-    const comment = await Comment.findByIdAndDelete(params.id);
+    const comment = await Comment.findByIdAndDelete(context.params.id);
 
     if (!comment) {
       return NextResponse.json(
