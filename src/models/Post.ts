@@ -14,10 +14,15 @@ const postSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  keywords: [{
-    type: String,
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  },
+  keywords: {
+    type: [String],
+    default: [],
     trim: true
-  }],
+  },
   views: {
     type: Number,
     default: 0
@@ -29,6 +34,9 @@ const postSchema = new mongoose.Schema({
   imageUrl: {
     type: String,
     trim: true
+  },
+  gptImageUrl: {
+    type: String,
   },
   slug: {
     type: String,
@@ -57,16 +65,36 @@ const postSchema = new mongoose.Schema({
     searchKeywords: [String],
     imageKeywords: [String]
   },
-  views: {
-    type: Number,
-    default: 0,
-  },
-  likes: {
-    type: Number,
-    default: 0,
-  },
 }, {
   timestamps: true,
 });
 
-export default mongoose.models.Post || mongoose.model('Post', postSchema); 
+// 업데이트 시 updatedAt 필드 자동 갱신
+postSchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+  next();
+});
+
+// 조회수 증가 메서드
+postSchema.methods.incrementViews = async function() {
+  this.views += 1;
+  await this.save();
+};
+
+// 좋아요 수 증가 메서드
+postSchema.methods.incrementLikes = async function() {
+  this.likes += 1;
+  await this.save();
+};
+
+// 좋아요 수 감소 메서드
+postSchema.methods.decrementLikes = async function() {
+  if (this.likes > 0) {
+    this.likes -= 1;
+    await this.save();
+  }
+};
+
+const Post = mongoose.models.Post || mongoose.model('Post', postSchema);
+
+export default Post; 
