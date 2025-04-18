@@ -27,7 +27,7 @@ export default function KeywordsPage() {
       }
       const data = await response.json();
       setKeywords(data);
-    } catch (_) {
+    } catch {
       console.error('키워드 불러오기 오류');
     } finally {
       setLoading(false);
@@ -45,7 +45,7 @@ export default function KeywordsPage() {
       }
 
       setKeywords(keywords.filter(keyword => keyword._id !== id));
-    } catch (_) {
+    } catch {
       console.error('키워드 삭제 오류');
     }
   };

@@ -1,24 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
 import { FaEdit, FaTrash, FaEye, FaPlus } from 'react-icons/fa';
 
 interface Post {
-  id: string;
+  _id: string;
   title: string;
-  description: string;
+  content: string;
   createdAt: string;
-  views: number;
-  likes: number;
+  imageUrl: string;
 }
 
 export default function PostsPage() {
-  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -26,140 +24,97 @@ export default function PostsPage() {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/admin/posts');
-      const data = await response.json();
-      
+      const response = await fetch('/api/posts');
       if (!response.ok) {
-        throw new Error(data.error || '포스트를 불러오는데 실패했습니다.');
+        throw new Error('게시글을 불러오는데 실패했습니다.');
       }
-
-      setPosts(data.posts);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.');
+      const data = await response.json();
+      setPosts(data);
+    } catch {
+      console.error('게시글 불러오기 오류');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (postId: string) => {
-    if (!confirm('정말로 이 포스트를 삭제하시겠습니까?')) {
-      return;
-    }
-
+  const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/admin/posts/${postId}`, {
+      const response = await fetch(`/api/posts/${id}`, {
         method: 'DELETE',
       });
 
       if (!response.ok) {
-        throw new Error('포스트 삭제에 실패했습니다.');
+        throw new Error('게시글 삭제에 실패했습니다.');
       }
 
-      // 목록 새로고침
-      fetchPosts();
-    } catch (error) {
-      alert('포스트 삭제 중 오류가 발생했습니다.');
+      setPosts(posts.filter(post => post._id !== id));
+    } catch {
+      console.error('게시글 삭제 오류');
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500">로딩 중...</div>
-      </div>
-    );
+    return <div>로딩 중...</div>;
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">포스트 관리</h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">게시글 관리</h1>
         <Link
           href="/admin/posts/new"
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          <FaPlus />
-          <span>새 포스트</span>
+          새 게시글 작성
         </Link>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-lg">
-          {error}
-        </div>
-      )}
-
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">제목</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작성일</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">조회수</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">좋아요</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">관리</th>
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                제목
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                작성일
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                작업
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {posts.map((post) => (
+              <tr key={post._id}>
+                <td className="px-6 py-4">
+                  <div className="text-sm font-medium text-gray-900">
+                    {post.title}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500">
+                    {format(new Date(post.createdAt), 'PPP', { locale: ko })}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <Link
+                    href={`/admin/posts/${post._id}/edit`}
+                    className="text-indigo-600 hover:text-indigo-900 mr-4"
+                  >
+                    수정
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(post._id)}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    삭제
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {posts.map((post) => (
-                <tr key={post.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <Link 
-                        href={`/posts/${post.id}`}
-                        className="text-gray-900 font-medium hover:text-blue-600"
-                      >
-                        {post.title}
-                      </Link>
-                      <p className="text-sm text-gray-500 line-clamp-1 mt-1">
-                        {post.description}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {formatDate(post.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {post.views.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {post.likes.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-4">
-                    <Link
-                      href={`/admin/posts/${post.id}/edit`}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <FaEdit className="inline-block" />
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(post.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <FaTrash className="inline-block" />
-                    </button>
-                    <Link
-                      href={`/posts/${post.id}`}
-                      target="_blank"
-                      className="text-gray-600 hover:text-gray-800"
-                    >
-                      <FaEye className="inline-block" />
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
