@@ -69,4 +69,4 @@ export default function EditPostPage({ id }: { id: string }) {
       </div>
     </div>
   );
-} 
+}
