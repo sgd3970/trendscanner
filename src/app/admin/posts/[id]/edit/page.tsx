@@ -1,12 +1,5 @@
-// ✅ page.tsx
 import EditPostPage from '@/components/EditPostPage';
 
-interface PageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function Page({ params }: PageProps) {
+export default function Page({ params }: { params: { id: string } }) {
   return <EditPostPage id={params.id} />;
 }
