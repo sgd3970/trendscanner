@@ -4,20 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PostForm from '@/components/PostForm';
 
-interface Post {
-  _id: string;
-  title: string;
-  content: string;
-  imageUrl: string;
-}
-
-interface PageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function EditPostPage({ params }: PageProps) {
+export default function EditPostPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,7 +32,7 @@ export default function EditPostPage({ params }: PageProps) {
   const handleSubmit = async (postData: any) => {
     try {
       setIsSubmitting(true);
-      
+
       const response = await fetch(`/api/admin/posts/${params.id}`, {
         method: 'PUT',
         headers: {
@@ -90,12 +77,12 @@ export default function EditPostPage({ params }: PageProps) {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <PostForm 
-          onSubmit={handleSubmit} 
+        <PostForm
+          onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           initialData={post}
         />
       </div>
     </div>
   );
-} 
+}
