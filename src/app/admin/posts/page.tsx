@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { FaEdit, FaTrash, FaEye, FaPlus } from 'react-icons/fa';
 
 interface Post {
   _id: string;

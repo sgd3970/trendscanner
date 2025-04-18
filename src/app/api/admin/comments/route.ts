@@ -7,7 +7,7 @@ export async function GET() {
     await connectDB();
     const comments = await Comment.find().sort({ createdAt: -1 });
     return NextResponse.json(comments);
-  } catch (error) {
+  } catch (_) {
     return NextResponse.json(
       { error: '댓글을 불러오는데 실패했습니다.' },
       { status: 500 }
@@ -34,7 +34,7 @@ export async function PATCH(request: Request) {
     }
 
     return NextResponse.json(comment);
-  } catch (error) {
+  } catch (_) {
     return NextResponse.json(
       { error: '댓글 업데이트에 실패했습니다.' },
       { status: 500 }
@@ -57,7 +57,7 @@ export async function DELETE(request: Request) {
     }
 
     return NextResponse.json({ message: '댓글이 삭제되었습니다.' });
-  } catch (error) {
+  } catch (_) {
     return NextResponse.json(
       { error: '댓글 삭제에 실패했습니다.' },
       { status: 500 }
