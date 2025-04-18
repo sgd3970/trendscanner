@@ -11,7 +11,7 @@ interface RouteParams {
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     await connectDB();
-    const { id } = await params;
+    const { id } = params;
 
     if (!id) {
       return NextResponse.json(
@@ -61,7 +61,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
   try {
     await connectDB();
 
-    const { id } = await params;
+    const { id } = params;
     
     if (!id) {
       return NextResponse.json(
@@ -92,7 +92,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
 export async function POST(request: Request, { params }: RouteParams) {
   try {
     await connectDB();
-    const { id } = await params;
+    const { id } = params;
     
     const post = await Post.findById(id);
     if (!post) {
@@ -103,13 +103,14 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     // 좋아요 수 증가
-    await Post.findByIdAndUpdate(id, { $inc: { likes: 1 } });
+    post.likes += 1;
+    await post.save();
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ likes: post.likes });
   } catch (error) {
     console.error('좋아요 처리 에러:', error);
     return NextResponse.json(
-      { error: '좋아요 처리에 실패했습니다.' },
+      { error: '좋아요 처리 중 오류가 발생했습니다.' },
       { status: 500 }
     );
   }

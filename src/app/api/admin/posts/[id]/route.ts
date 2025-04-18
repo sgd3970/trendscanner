@@ -11,7 +11,7 @@ interface RouteParams {
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     await connectDB();
-    const { id } = await params;
+    const { id } = params;
 
     const post = await Post.findById(id);
     if (!post) {
@@ -77,7 +77,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
 export async function DELETE(request: Request, { params }: RouteParams) {
   try {
     await connectDB();
-    const { id } = await params;
+    const { id } = params;
     
     const result = await Post.findByIdAndDelete(id);
 
