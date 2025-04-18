@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PostForm from '@/components/PostForm';
 
+interface Post {
+  _id: string;
+  title: string;
+  content: string;
+  imageUrl: string;
+}
+
 interface PageProps {
   params: {
     id: string;
@@ -11,39 +18,36 @@ interface PageProps {
 }
 
 export default function EditPostPage({ params }: PageProps) {
-  const { id } = params;
   const router = useRouter();
-  const [post, setPost] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [post, setPost] = useState<Post | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchPost();
-  }, [id]);
-
   const fetchPost = async () => {
     try {
-      const response = await fetch(`/api/admin/posts/${id}`);
-      const data = await response.json();
-
+      const response = await fetch(`/api/posts/${params.id}`);
       if (!response.ok) {
-        throw new Error(data.error || '포스트를 불러오는데 실패했습니다.');
+        throw new Error('게시글을 불러오는데 실패했습니다.');
       }
-
-      setPost(data.post);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.');
+      const data = await response.json();
+      setPost(data);
+    } catch (_) {
+      console.error('게시글 불러오기 오류');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPost();
+  }, [params.id]);
 
   const handleSubmit = async (postData: any) => {
     try {
       setIsSubmitting(true);
       
-      const response = await fetch(`/api/admin/posts/${id}`, {
+      const response = await fetch(`/api/admin/posts/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -64,7 +68,7 @@ export default function EditPostPage({ params }: PageProps) {
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-gray-500">로딩 중...</div>

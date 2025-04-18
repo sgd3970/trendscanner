@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaNewspaper, FaComments, FaChartLine, FaMagic } from 'react-icons/fa';
 import Link from 'next/link';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
 interface DashboardStats {
   totalPosts: number;
@@ -34,67 +36,57 @@ export default function AdminPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [posts, setPosts] = useState([]);
+  const [keywords, setKeywords] = useState([]);
+  const [comments, setComments] = useState([]);
 
   useEffect(() => {
-    fetchDashboardStats();
+    fetchData();
   }, []);
 
-  const fetchDashboardStats = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch('/api/admin/dashboard');
-      const data = await response.json();
-      if (response.ok) {
-        setStats(data);
-      }
-    } catch (error) {
-      console.error('대시보드 데이터 로딩 실패:', error);
+      const [postsRes, keywordsRes, commentsRes] = await Promise.all([
+        fetch('/api/posts'),
+        fetch('/api/keywords'),
+        fetch('/api/admin/comments')
+      ]);
+
+      const postsData = await postsRes.json();
+      const keywordsData = await keywordsRes.json();
+      const commentsData = await commentsRes.json();
+
+      setPosts(postsData);
+      setKeywords(keywordsData);
+      setComments(commentsData);
+    } catch (_) {
+      console.error('데이터 불러오기 실패');
     }
   };
 
   const handleCollectKeywords = async () => {
     try {
-      setIsLoading(true);
-      setMessage('');
-      
       const response = await fetch('/api/keywords/collect', {
-        method: 'POST',
+        method: 'POST'
       });
-
-      const data = await response.json();
-
       if (response.ok) {
-        setMessage(`키워드 ${data.count}개가 수집되었습니다.`);
-      } else {
-        setMessage(data.error);
+        await fetchData();
       }
-    } catch (error) {
-      setMessage('키워드 수집 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
+    } catch (_) {
+      console.error('키워드 수집 실패');
     }
   };
 
   const handleGeneratePost = async () => {
     try {
-      setIsLoading(true);
-      setMessage('');
-      
-      const response = await fetch('/api/posts/auto-generate', {
-        method: 'POST',
+      const response = await fetch('/api/admin/posting', {
+        method: 'POST'
       });
-
-      const data = await response.json();
-
       if (response.ok) {
-        setMessage(`포스트가 생성되었습니다: ${data.post.title}`);
-        router.refresh();
-      } else {
-        setMessage(data.error);
+        await fetchData();
       }
-    } catch (error) {
-      setMessage('포스트 생성 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
+    } catch (_) {
+      console.error('게시글 생성 실패');
     }
   };
 
