@@ -1,22 +1,24 @@
 import mongoose from 'mongoose';
 
-declare global {
-  let mongoose: {
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error(
+    'Please define the MONGODB_URI environment variable inside .env.local'
+  );
+}
+
+interface GlobalWithMongoose {
+  mongoose: {
     conn: typeof mongoose | null;
     promise: Promise<typeof mongoose> | null;
   };
 }
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error('MONGODB_URI 환경 변수가 정의되지 않았습니다.');
-}
-
-let cached = global.mongoose;
+let cached = (global as unknown as GlobalWithMongoose).mongoose;
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = (global as unknown as GlobalWithMongoose).mongoose = { conn: null, promise: null };
 }
 
 async function connectDB() {
