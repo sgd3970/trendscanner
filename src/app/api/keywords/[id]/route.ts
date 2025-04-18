@@ -5,19 +5,13 @@ import KeywordCache from '@/models/KeywordCache';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 export async function DELETE(
   request: NextRequest,
-  context: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const { id } = context.params;
+    const id = params.id;
 
     const result = await KeywordCache.findByIdAndDelete(id);
     if (!result) {
