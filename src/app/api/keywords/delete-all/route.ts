@@ -16,7 +16,7 @@ export async function DELETE() {
       deletedCount: result.deletedCount
     });
   } catch (error) {
-    console.error('키워드 일괄 삭제 에러:', error);
+    console.error('키워드 일괄 삭제 오류:', error);
     return NextResponse.json(
       { error: '키워드 삭제 중 오류가 발생했습니다.' },
       { status: 500 }

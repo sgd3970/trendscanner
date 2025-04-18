@@ -70,25 +70,33 @@ export default function KeywordsPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm('이 키워드를 삭제하시겠습니까?')) {
+      return;
+    }
+
     try {
+      setLoading(true);
       const response = await fetch(`/api/keywords/${id}`, {
         method: 'DELETE',
       });
 
       if (!response.ok) {
-        throw new Error('키워드 삭제에 실패했습니다.');
+        const errorData = await response.json();
+        throw new Error(errorData.error || '키워드 삭제에 실패했습니다.');
       }
 
       setKeywords(keywords.filter(keyword => keyword._id !== id));
       setError(null);
     } catch (error) {
       console.error('키워드 삭제 오류:', error);
-      setError('키워드 삭제 중 오류가 발생했습니다.');
+      setError(error instanceof Error ? error.message : '키워드 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteAll = async () => {
-    if (!confirm('모든 키워드를 삭제하시겠습니까?')) {
+    if (!confirm('모든 키워드를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
       return;
     }
 
@@ -101,14 +109,15 @@ export default function KeywordsPage() {
       });
 
       if (!response.ok) {
-        throw new Error('키워드 일괄 삭제에 실패했습니다.');
+        const errorData = await response.json();
+        throw new Error(errorData.error || '키워드 일괄 삭제에 실패했습니다.');
       }
 
       setKeywords([]);
       setError(null);
     } catch (error) {
       console.error('키워드 일괄 삭제 오류:', error);
-      setError('키워드 일괄 삭제 중 오류가 발생했습니다.');
+      setError(error instanceof Error ? error.message : '키워드 일괄 삭제 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -134,13 +143,15 @@ export default function KeywordsPage() {
           >
             {loading ? '수집 중...' : '키워드 수집'}
           </button>
-          <button
-            onClick={handleDeleteAll}
-            disabled={loading || keywords.length === 0}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
-          >
-            전체 삭제
-          </button>
+          {keywords.length > 0 && (
+            <button
+              onClick={handleDeleteAll}
+              disabled={loading}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+            >
+              전체 삭제
+            </button>
+          )}
         </div>
       </div>
 
@@ -189,7 +200,8 @@ export default function KeywordsPage() {
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
                     onClick={() => handleDelete(keyword._id)}
-                    className="text-red-600 hover:text-red-900"
+                    disabled={loading}
+                    className="text-red-600 hover:text-red-900 disabled:opacity-50"
                   >
                     삭제
                   </button>
