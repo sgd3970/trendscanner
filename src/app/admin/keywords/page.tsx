@@ -7,9 +7,8 @@ import { ko } from 'date-fns/locale';
 interface Keyword {
   _id: string;
   keyword: string;
-  count: number;
-  createdAt: string;
   used: boolean;
+  createdAt: string;
 }
 
 export default function KeywordsPage() {
@@ -30,7 +29,6 @@ export default function KeywordsPage() {
       }
       const data = await response.json();
       
-      // 응답 데이터 검증
       if (!data || !Array.isArray(data.keywords)) {
         throw new Error('키워드 데이터 형식이 올바르지 않습니다.');
       }
@@ -62,7 +60,6 @@ export default function KeywordsPage() {
       const data = await response.json();
       console.log('키워드 수집 응답:', data);
       
-      // 수집 후 키워드 목록 새로고침
       await fetchKeywords();
     } catch (error) {
       console.error('키워드 수집 오류:', error);
@@ -90,6 +87,33 @@ export default function KeywordsPage() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (!confirm('모든 키워드를 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch('/api/keywords/delete-all', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('키워드 일괄 삭제에 실패했습니다.');
+      }
+
+      setKeywords([]);
+      setError(null);
+    } catch (error) {
+      console.error('키워드 일괄 삭제 오류:', error);
+      setError('키워드 일괄 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -102,13 +126,22 @@ export default function KeywordsPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">키워드 관리</h1>
-        <button
-          onClick={handleCollectKeywords}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-        >
-          {loading ? '수집 중...' : '키워드 수집'}
-        </button>
+        <div className="space-x-4">
+          <button
+            onClick={handleCollectKeywords}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+          >
+            {loading ? '수집 중...' : '키워드 수집'}
+          </button>
+          <button
+            onClick={handleDeleteAll}
+            disabled={loading || keywords.length === 0}
+            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+          >
+            전체 삭제
+          </button>
+        </div>
       </div>
 
       {error && (
