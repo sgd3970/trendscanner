@@ -2,16 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Post from '@/models/Post';
 
-export async function GET(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
-  const { id } = context.params;
-
+export async function GET(request: NextRequest, context: any) {
   try {
     await connectDB();
-    const post = await Post.findById(id);
+    const { id } = context.params;
 
+    const post = await Post.findById(id);
     if (!post) {
       return NextResponse.json({ error: '포스트를 찾을 수 없습니다.' }, { status: 404 });
     }
@@ -23,13 +19,9 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
-  const { id } = context.params;
-
+export async function PUT(request: NextRequest, context: any) {
   try {
+    const { id } = context.params;
     const body = await request.json();
 
     if (!body.title || !body.content) {
@@ -61,14 +53,10 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
-  const { id } = context.params;
-
+export async function DELETE(request: NextRequest, context: any) {
   try {
     await connectDB();
+    const { id } = context.params;
 
     const result = await Post.findByIdAndDelete(id);
 
