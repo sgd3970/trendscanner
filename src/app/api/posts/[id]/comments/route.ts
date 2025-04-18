@@ -1,36 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Comment from '@/models/Comment';
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  context: any
+) {
   try {
     await connectDB();
-    const { id } = await params;
+    const { id } = context.params;
 
-    if (!id) {
-      return NextResponse.json(
-        { error: '포스트 ID가 필요합니다.' },
-        { status: 400 }
-      );
-    }
-
-    const comments = await Comment.find({ postId: id, isDeleted: { $ne: true } })
+    const comments = await Comment.find({ postId: id })
       .sort({ createdAt: -1 })
-      .select('_id author content createdAt')
-      .lean();
+      .select('content author createdAt');
 
-    return NextResponse.json(comments.map(comment => ({
-      ...comment,
-      _id: comment._id.toString()
-    })));
+    return NextResponse.json(comments);
   } catch (error) {
-    console.error('Error fetching comments:', error);
+    console.error('댓글 조회 오류:', error);
     return NextResponse.json(
       { error: '댓글을 불러오는데 실패했습니다.' },
       { status: 500 }
@@ -38,40 +24,32 @@ export async function GET(request: Request, { params }: RouteParams) {
   }
 }
 
-export async function POST(request: Request, { params }: RouteParams) {
+export async function POST(
+  request: NextRequest,
+  context: any
+) {
   try {
-    await connectDB();
-    const { id } = await params;
+    const { id } = context.params;
     const body = await request.json();
 
-    if (!id) {
+    if (!body.content || !body.author) {
       return NextResponse.json(
-        { error: '포스트 ID가 필요합니다.' },
+        { error: '내용과 작성자는 필수 입력 항목입니다.' },
         { status: 400 }
       );
     }
 
-    if (!body.content) {
-      return NextResponse.json(
-        { error: '댓글 내용이 필요합니다.' },
-        { status: 400 }
-      );
-    }
+    await connectDB();
 
     const comment = await Comment.create({
       postId: id,
-      author: body.author || '익명',
       content: body.content,
+      author: body.author,
     });
 
-    return NextResponse.json({
-      _id: comment._id.toString(),
-      author: comment.author,
-      content: comment.content,
-      createdAt: comment.createdAt
-    });
+    return NextResponse.json(comment);
   } catch (error) {
-    console.error('Error creating comment:', error);
+    console.error('댓글 작성 오류:', error);
     return NextResponse.json(
       { error: '댓글 작성에 실패했습니다.' },
       { status: 500 }
