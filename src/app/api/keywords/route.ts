@@ -10,15 +10,20 @@ export async function GET() {
     await connectDB();
 
     const keywords = await KeywordCache.find()
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // 응답 데이터 구조화
+    const formattedKeywords = keywords.map(keyword => ({
+      _id: keyword._id.toString(),
+      keyword: keyword.keyword,
+      count: 0, // 사용 횟수는 현재 구현되지 않음
+      createdAt: keyword.createdAt.toISOString(),
+      used: keyword.used
+    }));
 
     return NextResponse.json({
-      keywords: keywords.map(keyword => ({
-        _id: keyword._id,
-        keyword: keyword.keyword,
-        used: keyword.used,
-        createdAt: keyword.createdAt
-      }))
+      keywords: formattedKeywords
     });
   } catch (error) {
     console.error('키워드 목록 조회 에러:', error);

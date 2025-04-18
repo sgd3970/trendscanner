@@ -9,6 +9,7 @@ interface Keyword {
   keyword: string;
   count: number;
   createdAt: string;
+  used: boolean;
 }
 
 export default function KeywordsPage() {
@@ -22,20 +23,23 @@ export default function KeywordsPage() {
 
   const fetchKeywords = async () => {
     try {
+      setLoading(true);
       const response = await fetch('/api/keywords');
       if (!response.ok) {
         throw new Error('키워드를 불러오는데 실패했습니다.');
       }
       const data = await response.json();
-      if (data.keywords && Array.isArray(data.keywords)) {
-        setKeywords(data.keywords);
-      } else {
-        console.error('예상하지 못한 응답 형식:', data);
-        setError('키워드 데이터 형식이 올바르지 않습니다.');
+      
+      // 응답 데이터 검증
+      if (!data || !Array.isArray(data.keywords)) {
+        throw new Error('키워드 데이터 형식이 올바르지 않습니다.');
       }
+      
+      setKeywords(data.keywords);
+      setError(null);
     } catch (error) {
       console.error('키워드 불러오기 오류:', error);
-      setError('키워드를 불러오는 중 오류가 발생했습니다.');
+      setError(error instanceof Error ? error.message : '키워드를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -44,6 +48,8 @@ export default function KeywordsPage() {
   const handleCollectKeywords = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
       const response = await fetch('/api/keywords/collect', {
         method: 'POST',
       });
@@ -77,6 +83,7 @@ export default function KeywordsPage() {
       }
 
       setKeywords(keywords.filter(keyword => keyword._id !== id));
+      setError(null);
     } catch (error) {
       console.error('키워드 삭제 오류:', error);
       setError('키워드 삭제 중 오류가 발생했습니다.');
@@ -84,9 +91,11 @@ export default function KeywordsPage() {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-    </div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   return (
@@ -116,7 +125,7 @@ export default function KeywordsPage() {
                 키워드
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                사용 횟수
+                상태
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 생성일
@@ -133,7 +142,11 @@ export default function KeywordsPage() {
                   <div className="text-sm text-gray-900">{keyword.keyword}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{keyword.count || 0}</div>
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    keyword.used ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {keyword.used ? '사용됨' : '미사용'}
+                  </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
