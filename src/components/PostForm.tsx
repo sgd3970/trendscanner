@@ -9,31 +9,24 @@ interface PostFormProps {
     content: string;
     imageUrl: string;
   };
-  onSubmit: (data: {
-    title: string;
-    content: string;
-    imageUrl: string;
-  }) => Promise<void>;
+  onSubmit: (postData: any) => Promise<void>;
+  isSubmitting?: boolean;
 }
 
-export default function PostForm({ initialData, onSubmit }: PostFormProps) {
+export default function PostForm({ initialData, onSubmit, isSubmitting = false }: PostFormProps) {
   const router = useRouter();
   const [title, setTitle] = useState(initialData?.title || '');
   const [content, setContent] = useState(initialData?.content || '');
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
     try {
       await onSubmit({ title, content, imageUrl });
       router.push('/admin/posts');
     } catch (error) {
       console.error('게시글 저장 오류:', error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
