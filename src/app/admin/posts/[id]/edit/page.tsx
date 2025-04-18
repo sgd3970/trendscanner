@@ -22,7 +22,6 @@ export default function EditPostPage({ params }: PageProps) {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const fetchPost = async () => {
     try {
@@ -72,14 +71,6 @@ export default function EditPostPage({ params }: PageProps) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-gray-500">로딩 중...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-red-500 text-center">
-        {error}
       </div>
     );
   }

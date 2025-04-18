@@ -34,8 +34,6 @@ interface DashboardStats {
 export default function AdminPage() {
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
   const [posts, setPosts] = useState([]);
   const [keywords, setKeywords] = useState([]);
   const [comments, setComments] = useState([]);
