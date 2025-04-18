@@ -4,13 +4,12 @@ import Post from '@/models/Post';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const { id } = context.params;
+    const post = await Post.findById(params.id);
 
-    const post = await Post.findById(id);
     if (!post) {
       return NextResponse.json({ error: '포스트를 찾을 수 없습니다.' }, { status: 404 });
     }
@@ -24,7 +23,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const body = await request.json();
@@ -36,7 +35,7 @@ export async function PUT(
     await connectDB();
 
     const post = await Post.findByIdAndUpdate(
-      context.params.id,
+      params.id,
       {
         title: body.title,
         content: body.content,
@@ -60,13 +59,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const { id } = context.params;
 
-    const result = await Post.findByIdAndDelete(id);
+    const result = await Post.findByIdAndDelete(params.id);
 
     if (!result) {
       return NextResponse.json({ error: '포스트를 찾을 수 없습니다.' }, { status: 404 });
