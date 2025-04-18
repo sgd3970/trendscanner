@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Comment from '@/models/Comment';
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
+export async function DELETE(request: Request, { params }: RouteParams) {
   try {
     await connectDB();
 
