@@ -5,13 +5,16 @@ import KeywordCache from '@/models/KeywordCache';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// ✅ 정확한 타입 정의 사용
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Record<string, string> }
 ) {
   try {
     await connectDB();
-    const result = await KeywordCache.findByIdAndDelete(params.id);
+
+    const { id } = params;
+    const result = await KeywordCache.findByIdAndDelete(id);
 
     if (!result) {
       return NextResponse.json(
