@@ -2,14 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Comment from '@/models/Comment';
 
+type RouteContext = {
+  params: {
+    id: string;
+  };
+};
+
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
     await connectDB();
 
-    const comment = await Comment.findByIdAndDelete(params.id);
+    const comment = await Comment.findByIdAndDelete(context.params.id);
 
     if (!comment) {
       return NextResponse.json(
