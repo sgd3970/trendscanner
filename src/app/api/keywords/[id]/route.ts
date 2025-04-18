@@ -1,20 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import KeywordCache from '@/models/KeywordCache';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-type Context = {
-  params: {
-    id: string;
-  };
-};
-
-export async function DELETE(_: Request, { params }: Context) {
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
     await connectDB();
-    const result = await KeywordCache.findByIdAndDelete(params.id);
+    const result = await KeywordCache.findByIdAndDelete(context.params.id);
     
     if (!result) {
       return NextResponse.json(
