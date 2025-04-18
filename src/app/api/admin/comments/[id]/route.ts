@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Comment from '@/models/Comment';
-import { type AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 export async function DELETE(
   request: NextRequest,
-  context: AppRouterContext
+  context: any
 ) {
   try {
     await connectDB();
+    const { id } = context.params;
 
-    const comment = await Comment.findByIdAndDelete(context.params.id);
-
+    const comment = await Comment.findByIdAndDelete(id);
     if (!comment) {
       return NextResponse.json(
         { error: '댓글을 찾을 수 없습니다.' },
