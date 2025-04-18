@@ -86,10 +86,13 @@ export async function DELETE(
   }
 }
 
-export async function POST(request: Request, { params }: RouteParams) {
+export async function POST(
+  request: NextRequest,
+  context: any
+) {
   try {
     await connectDB();
-    const { id } = params;
+    const { id } = context.params;
     
     const post = await Post.findById(id);
     if (!post) {
@@ -105,9 +108,9 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ likes: post.likes });
   } catch (error) {
-    console.error('좋아요 처리 에러:', error);
+    console.error('좋아요 처리 오류:', error);
     return NextResponse.json(
-      { error: '좋아요 처리 중 오류가 발생했습니다.' },
+      { error: '좋아요 처리에 실패했습니다.' },
       { status: 500 }
     );
   }
