@@ -8,27 +8,39 @@ export const revalidate = 0;
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
-): Promise<Response> {
+) {
   try {
     await connectDB();
-    const result = await KeywordCache.findByIdAndDelete(params.id);
     
-    if (!result) {
-      return new Response(
-        JSON.stringify({ error: '키워드를 찾을 수 없습니다.' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
+    if (!params.id) {
+      return NextResponse.json(
+        { error: '키워드 ID가 필요합니다.' },
+        { status: 400 }
       );
     }
 
-    return new Response(
-      JSON.stringify({ message: '키워드가 삭제되었습니다.' }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    const result = await KeywordCache.findByIdAndDelete(params.id);
+    
+    if (!result) {
+      return NextResponse.json(
+        { error: '키워드를 찾을 수 없습니다.' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      message: '키워드가 삭제되었습니다.',
+      deletedId: params.id
+    });
   } catch (error) {
     console.error('키워드 삭제 오류:', error);
-    return new Response(
-      JSON.stringify({ error: '키워드 삭제 중 오류가 발생했습니다.' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    return NextResponse.json(
+      { 
+        error: '키워드 삭제 중 오류가 발생했습니다.',
+        details: error instanceof Error ? error.message : '알 수 없는 오류'
+      },
+      { status: 500 }
     );
   }
 }
