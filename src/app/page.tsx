@@ -42,6 +42,7 @@ interface Post {
       url: string;
     };
   };
+  slug?: string;
 }
 
 export default function Home() {
@@ -106,7 +107,7 @@ export default function Home() {
           {filteredPosts.map(post => (
             <Link
               key={post._id}
-              href={`/posts/${post._id}`}
+              href={`/post/${post.slug || post._id}`}
               className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden flex flex-col"
             >
               {/* 이미지 배경 */}

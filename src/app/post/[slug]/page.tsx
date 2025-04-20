@@ -16,9 +16,10 @@ interface Post {
   imageUrl: string;
   createdAt: string;
   likes: number;
+  slug: string;
 }
 
-export default function PostDetail() {
+export default function PostDetail({ params }: { params: { slug: string } }) {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -27,8 +28,7 @@ export default function PostDetail() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const slug = window.location.pathname.split('/').pop();
-        const response = await fetch(`/api/posts/${slug}`);
+        const response = await fetch(`/api/posts/by-slug/${params.slug}`);
         if (!response.ok) {
           throw new Error('게시글을 불러오는데 실패했습니다.');
         }
@@ -47,7 +47,7 @@ export default function PostDetail() {
     };
 
     fetchPost();
-  }, []);
+  }, [params.slug]);
 
   const handleLike = async () => {
     if (!post) return;

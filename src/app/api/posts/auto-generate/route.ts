@@ -15,6 +15,7 @@ const unsplash = createApi({
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+export const maxDuration = 300; // 5분 타임아웃 설정
 
 function generateSlug(title: string): string {
   return title
@@ -50,112 +51,116 @@ export async function POST(request: Request) {
     const createdPosts = [];
 
     for (const { keyword, _id } of selectedKeywords) {
-      console.log(`\n[${keyword}] 포스트 생성 시작`);
-
-      const prompt = `
-        당신은 블로그 작가 AI입니다. 다음 키워드에 대해 블로그 포스트를 생성해주세요.
-
-        다음 JSON 형식으로만 **정확하게** 응답하세요. **JSON 이외의 텍스트는 절대 포함하지 마세요.**
-        \`\`\`json
-        {
-          "title": "자연스럽고 읽기 좋은 블로그 제목",
-          "content": "### 소제목\\n\\n본문을 마크다운 형식으로, 1000자 이상 작성해주세요.",
-          "hashtags": ["태그1", "태그2", "태그3", "태그4", "태그5"],
-          "imageQuery": "이미지 검색용 영어 키워드"
-        }
-        \`\`\`
-
-        키워드: ${keyword}
-        `;
-
-
-      const gptResponse = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-      });
-
-      let parsedResponse;
       try {
-        const raw = gptResponse.choices[0].message?.content?.trim() || '';
-        console.log(`[${keyword}] GPT 응답 파싱 시도 - 원본:`, raw);
+        console.log(`\n[${keyword}] 포스트 생성 시작`);
 
-        // JSON 코드블록 제거 (```json ... ```)
-        const match = raw.match(/```json\n([\s\S]*?)\n```/i);
-        const jsonStr = match ? match[1] : raw;
-        console.log(`[${keyword}] JSON 문자열 추출:`, jsonStr);
+        const prompt = `
+          당신은 블로그 작가 AI입니다. 다음 키워드에 대해 **한국어**로 블로그 포스트를 생성해주세요.
+          모든 내용은 반드시 **한국어**로 작성되어야 하며, 영어가 포함되지 않도록 해주세요.
 
-        parsedResponse = JSON.parse(jsonStr);
-        console.log(`[${keyword}] GPT 응답 파싱 성공:`, parsedResponse);
+          다음 JSON 형식으로만 **정확하게** 응답하세요. **JSON 이외의 텍스트는 절대 포함하지 마세요.**
+          {
+            "title": "자연스럽고 읽기 좋은 블로그 제목 (한국어로)",
+            "content": "### 소제목\\n\\n본문을 마크다운 형식으로, 1000자 이상 작성해주세요.",
+            "hashtags": ["태그1", "태그2", "태그3", "태그4", "태그5"],
+            "imageQuery": "이미지 검색용 영어 키워드"
+          }
 
-        const originalContent = parsedResponse.content;
-        parsedResponse.content = parsedResponse.content
-          .replace(/!\[.*?\]\(.*?\)/g, '')
-          .replace(/https?:\/\/[^\s<>"']+?\.(?:jpg|jpeg|gif|png|webp)/gi, '')
-          .trim();
+          키워드: ${keyword}`;
 
-        if (originalContent !== parsedResponse.content) {
-          console.log(`[${keyword}] 본문에서 이미지 관련 내용 제거됨`);
-          console.log('원본:', originalContent);
-          console.log('수정됨:', parsedResponse.content);
+        const gptResponse = await openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          max_tokens: 2000,
+        });
+
+        let parsedResponse;
+        try {
+          const raw = gptResponse.choices[0].message?.content?.trim() || '';
+          console.log(`[${keyword}] GPT 응답 파싱 시도 - 원본:`, raw);
+
+          // JSON 문자열에서 중괄호 부분만 추출
+          const jsonMatch = raw.match(/\{[\s\S]*\}/);
+          const jsonStr = jsonMatch ? jsonMatch[0] : raw;
+          console.log(`[${keyword}] JSON 문자열 추출:`, jsonStr);
+
+          parsedResponse = JSON.parse(jsonStr);
+          console.log(`[${keyword}] GPT 응답 파싱 성공:`, parsedResponse);
+
+          const originalContent = parsedResponse.content;
+          parsedResponse.content = parsedResponse.content
+            .replace(/!\[.*?\]\(.*?\)/g, '')
+            .replace(/https?:\/\/[^\s<>"']+?\.(?:jpg|jpeg|gif|png|webp)/gi, '')
+            .trim();
+
+          if (originalContent !== parsedResponse.content) {
+            console.log(`[${keyword}] 본문에서 이미지 관련 내용 제거됨`);
+          }
+        } catch (error) {
+          console.error(`[${keyword}] GPT 응답 파싱 실패:`, error);
+          throw new Error(`GPT 응답 파싱 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
         }
-      } catch (error) {
-        console.error(`[${keyword}] GPT 응답 파싱 실패:`, error);
-        parsedResponse = {
-          title: keyword,
-          content: gptResponse.choices[0].message?.content || '',
-          hashtags: []
-        };
-        console.log(`[${keyword}] 기본값으로 대체:`, parsedResponse);
-      }
 
-      let imageUrl = '';
-      try {
-        const query = parsedResponse.imageQuery || parsedResponse.title || keyword;
-        const imageResponse = await unsplash.photos.getRandom({ query, count: 1 });
+        let imageUrl = '';
+        try {
+          const query = parsedResponse.imageQuery || parsedResponse.title || keyword;
+          const imageResponse = await unsplash.photos.getRandom({ query, count: 1 });
 
-        if (Array.isArray(imageResponse.response)) {
-          imageUrl = imageResponse.response[0]?.urls?.regular || '';
-        } else if (imageResponse.response?.urls?.regular) {
-          imageUrl = imageResponse.response.urls.regular;
+          if (Array.isArray(imageResponse.response)) {
+            imageUrl = imageResponse.response[0]?.urls?.regular || '';
+          } else if (imageResponse.response?.urls?.regular) {
+            imageUrl = imageResponse.response.urls.regular;
+          }
+        } catch (error) {
+          console.warn(`[${keyword}] Unsplash 이미지 가져오기 실패:`, error);
         }
+
+        const post = await Post.create({
+          title: parsedResponse.title || keyword,
+          slug: generateSlug(parsedResponse.title || keyword),
+          content: parsedResponse.content,
+          imageUrl,
+          tags: parsedResponse.hashtags || [keyword],
+          metadata: {
+            autoGenerated: true,
+            keywords: [keyword],
+          },
+        });
+
+        await KeywordCache.findByIdAndUpdate(_id, { used: true });
+
+        createdPosts.push({
+          _id: post._id,
+          title: post.title,
+          content: post.content,
+          imageUrl: post.imageUrl,
+          tags: post.tags,
+          createdAt: post.createdAt,
+        });
       } catch (error) {
-        console.warn(`[${keyword}] Unsplash 이미지 가져오기 실패`, error);
+        console.error(`[${keyword}] 포스트 생성 실패:`, error);
+        // 개별 포스트 생성 실패는 전체 프로세스를 중단하지 않음
+        continue;
       }
+    }
 
-      const post = await Post.create({
-        title: parsedResponse.title || keyword,
-        slug: generateSlug(parsedResponse.title || keyword),
-        content: parsedResponse.content,
-        imageUrl,
-        tags: parsedResponse.hashtags || [keyword],
-        metadata: {
-          autoGenerated: true,
-          keywords: [keyword],
-        },
-      });
-
-      await KeywordCache.findByIdAndUpdate(_id, { used: true });
-
-      createdPosts.push({
-        _id: post._id,
-        title: post.title,
-        content: post.content,
-        imageUrl: post.imageUrl,
-        tags: post.tags,
-        createdAt: post.createdAt,
-      });
+    if (createdPosts.length === 0) {
+      return NextResponse.json(
+        { error: '포스트 생성에 실패했습니다.' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
-      message: '모든 포스트가 성공적으로 생성되었습니다.',
+      message: '포스트가 성공적으로 생성되었습니다.',
       count: createdPosts.length,
       posts: createdPosts,
     });
   } catch (error) {
     console.error('자동 포스트 생성 에러:', error);
     return NextResponse.json(
-      { error: '포스트 생성 중 오류가 발생했습니다.' },
+      { error: error instanceof Error ? error.message : '포스트 생성 중 오류가 발생했습니다.' },
       { status: 500 }
     );
   }
