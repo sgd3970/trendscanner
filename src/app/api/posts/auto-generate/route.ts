@@ -60,7 +60,7 @@ export async function POST(request: Request) {
           요구사항:
           - **전체 분량은 최소 1500자 이상**이어야 합니다.
           - **자연스러운 문단 구성**과 **적절한 소제목**을 포함해주세요.
-          - 소제목은 “트렌드 변화의 배경”, “요즘 사람들이 반응하는 이유”, “앞으로의 전망” 등처럼 **사람이 실제로 쓸만한 표현**을 사용해주세요.
+          - 소제목은 "트렌드 변화의 배경", "요즘 사람들이 반응하는 이유", "앞으로의 전망" 등처럼 **사람이 실제로 쓸만한 표현**을 사용해주세요.
           - 모든 내용은 **한국어**로 작성되며, 영어는 사용하지 않습니다.
           - 내용은 마치 사람이 작성한 블로그 글처럼 부드럽고 자연스럽게 이어지도록 구성해주세요.
           - 독자가 실제로 흥미를 가질만한 흐름으로 써주세요.
@@ -77,25 +77,76 @@ export async function POST(request: Request) {
           키워드: ${keyword}
           `;
 
-        const gptResponse = await openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7,
-          max_tokens: 3000,
-        });
+        console.log(`[${keyword}] GPT API 호출 시작`);
+        let gptResponse;
+        try {
+          gptResponse = await openai.chat.completions.create({
+            model: 'gpt-3.5-turbo',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.7,
+            max_tokens: 3000,
+          });
+          console.log(`[${keyword}] GPT API 응답 성공:`, JSON.stringify(gptResponse, null, 2));
+        } catch (error) {
+          console.error(`[${keyword}] GPT API 호출 실패:`, {
+            error: error instanceof Error ? error.message : '알 수 없는 오류',
+            fullError: error
+          });
+          throw new Error(`GPT API 호출 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+        }
+
+        if (!gptResponse?.choices?.[0]?.message?.content) {
+          console.error(`[${keyword}] GPT 응답이 비어있거나 유효하지 않음:`, {
+            response: gptResponse,
+            choices: gptResponse?.choices,
+            message: gptResponse?.choices?.[0]?.message
+          });
+          throw new Error('GPT 응답이 유효하지 않습니다.');
+        }
 
         let parsedResponse;
         try {
-          const raw = gptResponse.choices[0]?.message?.content || '';
-          console.log(`[${keyword}] GPT 응답 파싱 시도 - 원본:`, raw);
+          const raw = gptResponse.choices[0].message.content;
+          console.log(`[${keyword}] GPT 원본 응답:`, raw);
+
+          // JSON 형식 검증
+          if (!raw.includes('{') || !raw.includes('}')) {
+            console.error(`[${keyword}] JSON 형식이 아닌 응답:`, raw);
+            throw new Error('응답이 JSON 형식이 아닙니다.');
+          }
 
           const jsonMatch = raw.match(/\{[\s\S]*\}/);
-          const jsonStr = jsonMatch ? jsonMatch[0] : raw;
-          console.log(`[${keyword}] JSON 문자열 추출:`, jsonStr);
+          if (!jsonMatch) {
+            console.error(`[${keyword}] JSON 추출 실패:`, raw);
+            throw new Error('JSON 형식을 찾을 수 없습니다.');
+          }
+
+          const jsonStr = jsonMatch[0];
+          console.log(`[${keyword}] 추출된 JSON 문자열:`, jsonStr);
 
           parsedResponse = JSON.parse(jsonStr);
-          console.log(`[${keyword}] GPT 응답 파싱 성공:`, parsedResponse);
+          console.log(`[${keyword}] JSON 파싱 성공:`, parsedResponse);
 
+          // 필수 필드 검증
+          if (!parsedResponse.title) {
+            console.error(`[${keyword}] 제목 필드 누락:`, parsedResponse);
+            throw new Error('제목이 누락되었습니다.');
+          }
+          if (!parsedResponse.content) {
+            console.error(`[${keyword}] 내용 필드 누락:`, parsedResponse);
+            throw new Error('내용이 누락되었습니다.');
+          }
+
+          // 내용 길이 검증
+          if (parsedResponse.content.length < 1500) {
+            console.error(`[${keyword}] 내용이 너무 짧음:`, {
+              length: parsedResponse.content.length,
+              content: parsedResponse.content
+            });
+            throw new Error('내용이 1500자 미만입니다.');
+          }
+
+          // 이미지 관련 내용 제거
           const originalContent = parsedResponse.content;
           parsedResponse.content = parsedResponse.content
             .replace(/!\[.*?\]\(.*?\)/g, '')
@@ -103,10 +154,24 @@ export async function POST(request: Request) {
             .trim();
 
           if (originalContent !== parsedResponse.content) {
-            console.log(`[${keyword}] 본문에서 이미지 관련 내용 제거됨`);
+            console.log(`[${keyword}] 이미지 관련 내용 제거됨:`, {
+              before: originalContent,
+              after: parsedResponse.content
+            });
           }
+
+          // 해시태그 검증
+          if (!Array.isArray(parsedResponse.hashtags) || parsedResponse.hashtags.length === 0) {
+            console.warn(`[${keyword}] 해시태그 누락 또는 비어있음:`, parsedResponse.hashtags);
+            parsedResponse.hashtags = [keyword];
+          }
+
         } catch (error) {
-          console.error(`[${keyword}] GPT 응답 파싱 실패:`, error);
+          console.error(`[${keyword}] GPT 응답 파싱 실패:`, {
+            error: error instanceof Error ? error.message : '알 수 없는 오류',
+            fullError: error,
+            response: gptResponse?.choices?.[0]?.message?.content
+          });
           throw new Error(`GPT 응답 파싱 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
         }
 
