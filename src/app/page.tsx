@@ -59,7 +59,6 @@ export default function Home() {
           throw new Error('포스트를 불러오는데 실패했습니다.');
         }
         const data = await response.json();
-        console.log('Fetched posts data:', data);
         setPosts(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');

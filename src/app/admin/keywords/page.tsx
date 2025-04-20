@@ -39,7 +39,6 @@ export default function KeywordsPage() {
       setKeywords(data.keywords);
       setError(null);
     } catch (error) {
-      console.error('키워드 불러오기 오류:', error);
       setError(error instanceof Error ? error.message : '키워드를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
@@ -60,12 +59,8 @@ export default function KeywordsPage() {
         throw new Error(errorData.error || '키워드 수집에 실패했습니다.');
       }
 
-      const data = await response.json();
-      console.log('키워드 수집 응답:', data);
-      
       await fetchKeywords();
     } catch (error) {
-      console.error('키워드 수집 오류:', error);
       setError(error instanceof Error ? error.message : '키워드 수집 중 오류가 발생했습니다.');
     } finally {
       setIsCollecting(false);
@@ -91,7 +86,6 @@ export default function KeywordsPage() {
       setKeywords(keywords.filter(keyword => keyword._id !== id));
       setError(null);
     } catch (error) {
-      console.error('키워드 삭제 오류:', error);
       setError(error instanceof Error ? error.message : '키워드 삭제 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
@@ -119,7 +113,6 @@ export default function KeywordsPage() {
       setKeywords([]);
       setError(null);
     } catch (error) {
-      console.error('키워드 일괄 삭제 오류:', error);
       setError(error instanceof Error ? error.message : '키워드 일괄 삭제 중 오류가 발생했습니다.');
     } finally {
       setIsDeleting(false);

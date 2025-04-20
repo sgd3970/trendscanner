@@ -87,7 +87,6 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('포스트 삭제 에러:', error);
     return NextResponse.json(
       { error: '포스트 삭제 중 오류가 발생했습니다.' },
       { status: 500 }
