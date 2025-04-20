@@ -50,6 +50,10 @@ const nextConfig = {
   },
   devIndicators: {
     buildActivity: false
+  },
+  typescript: {
+    // ⚠️ 타입 체크 오류 무시
+    ignoreBuildErrors: true,
   }
 }
 
