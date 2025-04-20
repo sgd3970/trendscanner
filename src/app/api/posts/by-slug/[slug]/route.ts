@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Post from '@/models/Post';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   context: { params: { slug: string } }
@@ -10,7 +12,13 @@ export async function GET(
     await connectDB();
     const { slug } = context.params;
 
-    const post = await Post.findOne({ slug });
+    const post = await Post.findOne({ 
+      $or: [
+        { slug: slug },
+        { _id: slug }
+      ]
+    });
+
     if (!post) {
       return NextResponse.json(
         { error: '포스트를 찾을 수 없습니다.' },

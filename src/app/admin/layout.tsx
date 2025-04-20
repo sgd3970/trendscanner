@@ -4,7 +4,13 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import AdminNavbar from '@/components/AdminNavbar';
 import Link from 'next/link';
-import { HomeIcon, DocumentTextIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import {
+  HomeIcon,
+  DocumentTextIcon,
+  ChatBubbleLeftIcon,
+  KeyIcon,
+  PencilSquareIcon,
+} from '@heroicons/react/24/outline';
 
 export default function AdminLayout({
   children,
@@ -29,44 +35,80 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminNavbar />
-      <main className="ml-64 p-8">
-        <nav className="space-y-1">
-          <Link
-            href="/admin"
-            className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-              pathname === '/admin'
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-            }`}
-          >
-            <HomeIcon className="w-5 h-5 mr-3" />
-            대시보드
-          </Link>
-          <Link
-            href="/admin/posts"
-            className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-              pathname === '/admin/posts'
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-            }`}
-          >
-            <DocumentTextIcon className="w-5 h-5 mr-3" />
-            게시글 관리
-          </Link>
-          <Link
-            href="/admin/comments"
-            className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-              pathname === '/admin/comments'
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-            }`}
-          >
-            <ChatBubbleLeftRightIcon className="w-5 h-5 mr-3" />
-            댓글 관리
-          </Link>
+    <div className="min-h-screen bg-gray-50 flex flex-col sm:flex-row">
+      {/* 사이드바 */}
+      <aside className="bg-white shadow-sm w-full sm:w-64 sm:min-h-screen">
+        <nav className="p-4">
+          <div className="mb-8">
+            <h1 className="text-xl font-bold text-gray-800">관리자 페이지</h1>
+          </div>
+          
+          <div className="space-y-2">
+            <Link
+              href="/admin/dashboard"
+              className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                pathname === '/admin/dashboard'
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <HomeIcon className="w-5 h-5 mr-3" />
+              <span>대시보드</span>
+            </Link>
+
+            <Link
+              href="/admin/posts"
+              className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                pathname === '/admin/posts'
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <DocumentTextIcon className="w-5 h-5 mr-3" />
+              <span>게시글 관리</span>
+            </Link>
+
+            <Link
+              href="/admin/comments"
+              className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                pathname === '/admin/comments'
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <ChatBubbleLeftIcon className="w-5 h-5 mr-3" />
+              <span>댓글 관리</span>
+            </Link>
+
+            <Link
+              href="/admin/keywords"
+              className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                pathname === '/admin/keywords'
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <KeyIcon className="w-5 h-5 mr-3" />
+              <span>키워드 관리</span>
+            </Link>
+
+            <Link
+              href="/admin/auto-posting"
+              className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                pathname === '/admin/auto-posting'
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <PencilSquareIcon className="w-5 h-5 mr-3" />
+              <span>자동 포스팅</span>
+            </Link>
+          </div>
         </nav>
+      </aside>
+
+      {/* 메인 콘텐츠 */}
+      <main className="flex-1 p-4 sm:p-6 md:p-8">
         {children}
       </main>
     </div>
