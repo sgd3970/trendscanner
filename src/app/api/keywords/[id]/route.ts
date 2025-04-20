@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import KeywordCache from '@/models/KeywordCache';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+interface Params {
+  id: string;
+}
+
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  context: { params: Params }
 ) {
-  if (!params.id) {
+  if (!context.params.id) {
     return NextResponse.json(
       { error: '키워드 ID가 필요합니다.' },
       { status: 400 }
@@ -18,7 +23,7 @@ export async function DELETE(
 
   try {
     await connectDB();
-    const result = await KeywordCache.findByIdAndDelete(params.id);
+    const result = await KeywordCache.findByIdAndDelete(context.params.id);
     
     if (!result) {
       return NextResponse.json(
@@ -30,7 +35,7 @@ export async function DELETE(
     return NextResponse.json({
       success: true,
       message: '키워드가 삭제되었습니다.',
-      deletedId: params.id
+      deletedId: context.params.id
     });
   } catch (error) {
     console.error('키워드 삭제 오류:', error);
