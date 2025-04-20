@@ -19,10 +19,16 @@ interface AutoPostingResponse {
   posts: Post[];
 }
 
+interface ErrorResponse {
+  error: string;
+  details?: any;
+}
+
 export default function AutoPostingPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   const [success, setSuccess] = useState('');
   const [keywordCount, setKeywordCount] = useState(1);
 
@@ -30,8 +36,11 @@ export default function AutoPostingPage() {
     setIsLoading(true);
     setError('');
     setSuccess('');
+    setDebugInfo(null);
 
     try {
+      console.log('자동 포스팅 요청 시작:', { keywordCount });
+      
       const response = await fetch('/api/posts/auto-generate', {
         method: 'POST',
         headers: {
@@ -40,16 +49,41 @@ export default function AutoPostingPage() {
         body: JSON.stringify({ keywordCount }),
       });
 
-      const data: AutoPostingResponse = await response.json();
+      const data = await response.json();
+      console.log('API 응답:', data);
 
       if (!response.ok) {
-        throw new Error(data.message || '자동 포스팅에 실패했습니다.');
+        // 에러 응답 처리
+        const errorMessage = data.error || '자동 포스팅에 실패했습니다.';
+        console.error('API 에러:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorMessage,
+          details: data
+        });
+        setError(errorMessage);
+        setDebugInfo({
+          status: response.status,
+          statusText: response.statusText,
+          error: errorMessage,
+          details: data
+        });
+        return;
       }
 
       setSuccess(`${data.count}개의 포스트가 성공적으로 생성되었습니다.`);
+      setDebugInfo({
+        success: true,
+        createdPosts: data.posts
+      });
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '자동 포스팅 중 오류가 발생했습니다.');
+      console.error('자동 포스팅 에러:', err);
+      setError('자동 포스팅 중 오류가 발생했습니다.');
+      setDebugInfo({
+        error: err instanceof Error ? err.message : '알 수 없는 오류',
+        fullError: err
+      });
     } finally {
       setIsLoading(false);
     }
@@ -95,14 +129,32 @@ export default function AutoPostingPage() {
         </button>
 
         {error && (
-          <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
-            {error}
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <h3 className="text-red-700 font-semibold mb-2">오류 발생</h3>
+            <p className="text-red-600 mb-2">{error}</p>
+            {debugInfo && (
+              <div className="mt-4">
+                <h4 className="text-sm font-semibold text-red-700 mb-2">디버그 정보:</h4>
+                <pre className="bg-red-100 p-4 rounded text-xs overflow-auto">
+                  {JSON.stringify(debugInfo, null, 2)}
+                </pre>
+              </div>
+            )}
           </div>
         )}
 
         {success && (
-          <div className="mt-4 p-4 bg-green-100 text-green-700 rounded">
-            {success}
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <h3 className="text-green-700 font-semibold mb-2">성공</h3>
+            <p className="text-green-600">{success}</p>
+            {debugInfo && debugInfo.success && (
+              <div className="mt-4">
+                <h4 className="text-sm font-semibold text-green-700 mb-2">생성된 포스트:</h4>
+                <pre className="bg-green-100 p-4 rounded text-xs overflow-auto">
+                  {JSON.stringify(debugInfo.createdPosts, null, 2)}
+                </pre>
+              </div>
+            )}
           </div>
         )}
       </div>
