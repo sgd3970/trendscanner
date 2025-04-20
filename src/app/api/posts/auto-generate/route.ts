@@ -105,25 +105,29 @@ export async function POST(request: Request) {
         let parsedResponse;
         try {
           const raw = gptResponse.choices[0].message.content;
-          console.log(`[${keyword}] GPT 원본 응답:`, raw);
+          console.error(`[${keyword}] GPT 응답 원본:`, raw);
 
-          // JSON 형식 검증
-          if (!raw.includes('{') || !raw.includes('}')) {
-            console.error(`[${keyword}] JSON 형식이 아닌 응답:`, raw);
-            throw new Error('응답이 JSON 형식이 아닙니다.');
-          }
-
+          // JSON 형식 검증 및 추출
+          let jsonStr = raw;
           const jsonMatch = raw.match(/\{[\s\S]*\}/);
-          if (!jsonMatch) {
-            console.error(`[${keyword}] JSON 추출 실패:`, raw);
-            throw new Error('JSON 형식을 찾을 수 없습니다.');
+          if (jsonMatch) {
+            jsonStr = jsonMatch[0];
+            console.log(`[${keyword}] 추출된 JSON:`, jsonStr);
+          } else {
+            console.error(`[${keyword}] JSON 응답 아님:`, raw);
+            throw new Error("GPT 응답이 유효한 JSON 형식이 아닙니다.");
           }
 
-          const jsonStr = jsonMatch[0];
-          console.log(`[${keyword}] 추출된 JSON 문자열:`, jsonStr);
-
-          parsedResponse = JSON.parse(jsonStr);
-          console.log(`[${keyword}] JSON 파싱 성공:`, parsedResponse);
+          try {
+            parsedResponse = JSON.parse(jsonStr);
+            console.log(`[${keyword}] JSON 파싱 성공:`, parsedResponse);
+          } catch (e) {
+            console.error(`[${keyword}] JSON 파싱 오류:`, {
+              error: e,
+              jsonStr: jsonStr
+            });
+            throw new Error("GPT 응답 JSON 파싱 실패");
+          }
 
           // 필수 필드 검증
           if (!parsedResponse.title) {
@@ -165,12 +169,12 @@ export async function POST(request: Request) {
           }
 
         } catch (error) {
-          console.error(`[${keyword}] GPT 응답 파싱 실패:`, {
+          console.error(`[${keyword}] GPT 응답 처리 실패:`, {
             error: error instanceof Error ? error.message : '알 수 없는 오류',
             fullError: error,
             response: gptResponse?.choices?.[0]?.message?.content
           });
-          throw new Error(`GPT 응답 파싱 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+          throw new Error(`GPT 응답 처리 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
         }
 
         let imageUrl = '';
