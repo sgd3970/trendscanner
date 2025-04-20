@@ -30,7 +30,7 @@ export default function AutoPostingPage() {
     setSuccess('');
 
     try {
-      const response = await fetch('/api/admin/auto-posting', {
+      const response = await fetch('/api/posts/auto-generate', {
         method: 'POST',
       });
 
