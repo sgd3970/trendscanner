@@ -6,15 +6,18 @@ import KeywordCache from '@/models/KeywordCache';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-interface Params {
-  id: string;
-}
+type Props = {
+  params: {
+    id: string;
+  };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
 
 export async function DELETE(
-  _request: NextRequest,
-  context: { params: Params }
+  request: NextRequest,
+  props: Props
 ) {
-  if (!context.params.id) {
+  if (!props.params.id) {
     return NextResponse.json(
       { error: '키워드 ID가 필요합니다.' },
       { status: 400 }
@@ -23,7 +26,7 @@ export async function DELETE(
 
   try {
     await connectDB();
-    const result = await KeywordCache.findByIdAndDelete(context.params.id);
+    const result = await KeywordCache.findByIdAndDelete(props.params.id);
     
     if (!result) {
       return NextResponse.json(
@@ -35,7 +38,7 @@ export async function DELETE(
     return NextResponse.json({
       success: true,
       message: '키워드가 삭제되었습니다.',
-      deletedId: context.params.id
+      deletedId: props.params.id
     });
   } catch (error) {
     console.error('키워드 삭제 오류:', error);
