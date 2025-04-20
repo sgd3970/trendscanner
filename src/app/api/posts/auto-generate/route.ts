@@ -85,7 +85,7 @@ export async function POST(request: Request) {
 
         let parsedResponse;
         try {
-          const raw = gptResponse.choices[0].message?.content?.trim() || '';
+          const raw = gptResponse.choices[0]?.message?.content || '';
           console.log(`[${keyword}] GPT 응답 파싱 시도 - 원본:`, raw);
 
           const jsonMatch = raw.match(/\{[\s\S]*\}/);
