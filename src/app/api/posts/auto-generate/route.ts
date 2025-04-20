@@ -55,34 +55,32 @@ export async function POST(request: Request) {
         console.log(`\n[${keyword}] 포스트 생성 시작`);
 
         const prompt = `
-          당신은 트렌드 분석 블로그 작가입니다. 아래 키워드를 바탕으로 블로그 글을 작성해주세요. 
-          **전체 글자 수는 최소 1500자 이상**이어야 하며, 문단 구분과 소제목(##)을 포함한 **구조적이고 가독성 좋은 마크다운 형식**으로 작성해주세요.
+당신은 트렌드 분석 블로그 작가입니다. 아래 키워드를 바탕으로 블로그 글을 작성해주세요.
 
-          ⚠️ 지켜야 할 규칙:
-          - 모든 문장은 반드시 **한국어로 작성**
-          - 제목은 40자 이내로 흥미를 유도
-          - 소제목은 최소 3개 이상 사용
-          - 각 소제목마다 문단을 300자 이상 쓰기
-          - 불필요한 영어 또는 코드 금지
+- **전체 글자 수는 최소 1500자 이상**
+- **문단 간 줄바꿈 포함**
+- **소제목은 Markdown 형식으로(##)**
+- **각 소제목마다 문단을 400자 이상 작성**
+- **도입부/본문/분석/전망 구조**
+- **중요 문장은 굵게 처리**
+- **절대 영어/불필요한 텍스트 없이 한국어만 작성**
 
-          결과는 다음 JSON 형식으로만 응답하세요. JSON 외 텍스트는 금지입니다:
+결과는 다음 JSON 형식으로 응답하세요. JSON 이외 텍스트는 절대 포함하지 마세요.
+{
+  "title": "흥미롭고 자연스러운 블로그 제목 (한국어)",
+  "content": "# 도입부\n\n(300자 이상 도입부)\n\n## 트렌드 분석\n\n(400자 이상 상세 설명)\n\n## 전문가 시각\n\n(400자 이상 분석과 예측)\n\n## 결론\n\n(300자 이상 요약 및 전망)",
+  "hashtags": ["관련태그1", "관련태그2", "관련태그3", "관련태그4", "관련태그5"],
+  "imageQuery": "이미지 검색용 영어 키워드"
+}
 
-          {
-            "title": "흥미롭고 자연스러운 블로그 제목 (한국어)",
-            "content": "# 도입부\\n\\n(300자 이상 도입부)\\n\\n## 트렌드 분석\\n\\n(400자 이상 상세 설명)\\n\\n## 전문가 시각\\n\\n(400자 이상 분석과 예측)\\n\\n## 결론\\n\\n(300자 이상 요약 및 전망)",
-            "hashtags": ["관련태그1", "관련태그2", "관련태그3", "관련태그4", "관련태그5"],
-            "imageQuery": "이미지 검색용 영어 키워드"
-          }
+키워드: ${keyword}
+`;
 
-          키워드: ${keyword}
-          `;
-
-        
         const gptResponse = await openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
-          max_tokens: 2000,
+          max_tokens: 3000,
         });
 
         let parsedResponse;
@@ -90,7 +88,6 @@ export async function POST(request: Request) {
           const raw = gptResponse.choices[0].message?.content?.trim() || '';
           console.log(`[${keyword}] GPT 응답 파싱 시도 - 원본:`, raw);
 
-          // JSON 문자열에서 중괄호 부분만 추출
           const jsonMatch = raw.match(/\{[\s\S]*\}/);
           const jsonStr = jsonMatch ? jsonMatch[0] : raw;
           console.log(`[${keyword}] JSON 문자열 추출:`, jsonStr);
@@ -101,7 +98,7 @@ export async function POST(request: Request) {
           const originalContent = parsedResponse.content;
           parsedResponse.content = parsedResponse.content
             .replace(/!\[.*?\]\(.*?\)/g, '')
-            .replace(/https?:\/\/[^\s<>"']+?\.(?:jpg|jpeg|gif|png|webp)/gi, '')
+            .replace(/https?:\/\/[\S]+\.(jpg|jpeg|png|gif|webp)/gi, '')
             .trim();
 
           if (originalContent !== parsedResponse.content) {
@@ -150,7 +147,6 @@ export async function POST(request: Request) {
         });
       } catch (error) {
         console.error(`[${keyword}] 포스트 생성 실패:`, error);
-        // 개별 포스트 생성 실패는 전체 프로세스를 중단하지 않음
         continue;
       }
     }

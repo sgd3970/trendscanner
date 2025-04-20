@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import Image from 'next/image';
 import Link from 'next/link';
 import { HeartIcon } from '@heroicons/react/24/outline';
@@ -20,6 +21,63 @@ interface Post {
   likes: number;
   slug: string;
 }
+
+// 커스텀 이미지 컴포넌트
+const CustomImage = (props: any) => {
+  if (!props.src || typeof props.src !== 'string') return null;
+  
+  try {
+    new URL(props.src);
+  } catch (_) {
+    console.error('Invalid image URL:', props.src);
+    return null;
+  }
+
+  return (
+    <div className="my-8">
+      <div className="relative w-full h-[400px]">
+        <Image
+          src={props.src}
+          alt={props.alt || ''}
+          fill
+          className="object-cover rounded-lg"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          priority={true}
+        />
+      </div>
+      {props.alt && (
+        <div className="text-center text-sm text-gray-500 mt-2">
+          {props.alt}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// 커스텀 링크 컴포넌트
+const CustomLink = (props: any) => {
+  const href = props.href;
+  const isInternalLink = href && (href.startsWith('/') || href.startsWith('#'));
+
+  if (isInternalLink) {
+    return (
+      <Link href={href} className="text-blue-600 hover:text-blue-800 underline">
+        {props.children}
+      </Link>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-600 hover:text-blue-800 underline"
+    >
+      {props.children}
+    </a>
+  );
+};
 
 export default function PostDetail({ params }: { params: { slug: string } }) {
   const [post, setPost] = useState<Post | null>(null);
@@ -158,8 +216,31 @@ export default function PostDetail({ params }: { params: { slug: string } }) {
             )}
 
             {/* 본문 */}
-            <div className="prose prose-sm sm:prose lg:prose-lg max-w-none">
-              <ReactMarkdown>{post.content}</ReactMarkdown>
+            <div className="prose prose-sm sm:prose lg:prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  img: CustomImage,
+                  a: CustomLink,
+                  p: ({ children }) => <p className="mb-4 text-gray-700">{children}</p>,
+                  h1: ({ children }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-2xl font-bold mt-6 mb-3">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-xl font-bold mt-5 mb-2">{children}</h3>,
+                  ul: ({ children }) => <ul className="list-disc list-inside mb-4">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal list-inside mb-4">{children}</ol>,
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-gray-200 pl-4 italic my-4">{children}</blockquote>
+                  ),
+                  code: ({ children }) => (
+                    <code className="bg-gray-100 rounded px-1 py-0.5 text-sm font-mono">{children}</code>
+                  ),
+                  pre: ({ children }) => (
+                    <pre className="bg-gray-100 rounded p-4 overflow-x-auto my-4">{children}</pre>
+                  ),
+                }}
+              >
+                {post.content}
+              </ReactMarkdown>
             </div>
           </div>
 
