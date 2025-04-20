@@ -10,6 +10,8 @@ import {
   ChatBubbleLeftIcon,
   KeyIcon,
   PencilSquareIcon,
+  ArrowLeftOnRectangleIcon,
+  UserIcon,
 } from '@heroicons/react/24/outline';
 
 export default function AdminLayout({
@@ -29,6 +31,11 @@ export default function AdminLayout({
       }
     }
   }, [router, isLoginPage]);
+
+  const handleLogout = () => {
+    // 로그아웃 로직 구현
+    router.push('/');
+  };
 
   if (isLoginPage) {
     return <>{children}</>;
@@ -103,6 +110,24 @@ export default function AdminLayout({
               <PencilSquareIcon className="w-5 h-5 mr-3" />
               <span>자동 포스팅</span>
             </Link>
+
+            <Link
+              href="/"
+              className="flex items-center px-4 py-2 rounded-lg transition-colors text-gray-600 hover:bg-gray-50"
+            >
+              <UserIcon className="w-5 h-5 mr-3" />
+              <span>사용자 페이지로 이동</span>
+            </Link>
+          </div>
+
+          <div className="mt-8 pt-4 border-t border-gray-200">
+            <button
+              onClick={handleLogout}
+              className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <ArrowLeftOnRectangleIcon className="w-5 h-5 mr-3" />
+              <span>로그아웃</span>
+            </button>
           </div>
         </nav>
       </aside>
