@@ -10,6 +10,10 @@ module.exports = {
       fontFamily: {
         sans: ['var(--font-inter)'],
       },
+      colors: {
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+      },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
@@ -18,4 +22,5 @@ module.exports = {
     },
   },
   plugins: [],
+  important: true,
 }; 

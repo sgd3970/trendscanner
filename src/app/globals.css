@@ -21,42 +21,29 @@
   }
 }
 
-body {
-  font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif;
-  background-color: #f9fafb;
-  color: #333;
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+    font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif;
+  }
 }
 
-header {
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+@layer components {
+  header {
+    @apply bg-white shadow-md;
+  }
 
-h1 {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
+  h1 {
+    @apply text-2xl font-bold;
+  }
 
-nav a {
-  margin-left: 1rem;
-  color: #0070f3;
-  text-decoration: none;
-}
+  nav a {
+    @apply ml-4 text-blue-600 no-underline hover:underline;
+  }
 
-nav a:hover {
-  text-decoration: underline;
-}
-
-.post-card {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
-  transition: transform 0.2s;
-}
-
-.post-card:hover {
-  transform: translateY(-5px);
+  .post-card {
+    @apply bg-white rounded-lg shadow-md p-4 transition-transform duration-200 hover:-translate-y-1;
+  }
 }
 
 /* Hide Next.js Dev Tools */
@@ -68,8 +55,5 @@ nav a:hover {
 .vercel-badge,
 .dev-tools-indicator-menu,
 [data-nextjs-dev-tools-button] {
-  display: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
+  @apply hidden opacity-0 invisible pointer-events-none;
 }
