@@ -15,7 +15,7 @@ const unsplash = createApi({
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-export const maxDuration = 300; // 5분 타임아웃 설정
+export const maxDuration = 60; // 60초로 수정 (Vercel Hobby 플랜 제한)
 
 function generateSlug(title: string): string {
   return title
