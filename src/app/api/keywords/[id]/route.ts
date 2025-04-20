@@ -1,52 +1,37 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import KeywordCache from '@/models/KeywordCache';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-type Props = {
+type DeleteParams = {
   params: {
     id: string;
   };
-  searchParams: { [key: string]: string | string[] | undefined };
 };
 
 export async function DELETE(
   request: NextRequest,
-  props: Props
+  { params }: DeleteParams
 ) {
-  if (!props.params.id) {
-    return NextResponse.json(
-      { error: '키워드 ID가 필요합니다.' },
-      { status: 400 }
-    );
-  }
-
   try {
     await connectDB();
-    const result = await KeywordCache.findByIdAndDelete(props.params.id);
-    
-    if (!result) {
+    const { id } = params;
+
+    const keyword = await KeywordCache.findByIdAndDelete(id);
+    if (!keyword) {
       return NextResponse.json(
         { error: '키워드를 찾을 수 없습니다.' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      message: '키워드가 삭제되었습니다.',
-      deletedId: props.params.id
-    });
+    return NextResponse.json({ message: '키워드가 삭제되었습니다.' });
   } catch (error) {
     console.error('키워드 삭제 오류:', error);
     return NextResponse.json(
-      { 
-        error: '키워드 삭제 중 오류가 발생했습니다.',
-        details: error instanceof Error ? error.message : '알 수 없는 오류'
-      },
+      { error: '키워드 삭제에 실패했습니다.' },
       { status: 500 }
     );
   }
