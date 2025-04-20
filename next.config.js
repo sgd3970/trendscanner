@@ -48,7 +48,9 @@ const nextConfig = {
       }
     ],
   },
-  devIndicators: false
+  devIndicators: {
+    buildActivity: false
+  }
 }
 
 module.exports = nextConfig 
