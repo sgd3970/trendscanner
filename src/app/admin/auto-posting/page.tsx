@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaSpinner } from 'react-icons/fa';
 
@@ -8,13 +8,14 @@ interface Post {
   _id: string;
   title: string;
   content: string;
-  keywords: string[];
+  tags: string[];
   imageUrl?: string;
+  createdAt: string;
 }
 
 interface AutoPostingResponse {
-  success: boolean;
   message: string;
+  count: number;
   posts: Post[];
 }
 
@@ -23,6 +24,7 @@ export default function AutoPostingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [keywordCount, setKeywordCount] = useState(1);
 
   const handleAutoPosting = async () => {
     setIsLoading(true);
@@ -32,6 +34,10 @@ export default function AutoPostingPage() {
     try {
       const response = await fetch('/api/posts/auto-generate', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ keywordCount }),
       });
 
       const data: AutoPostingResponse = await response.json();
@@ -40,20 +46,7 @@ export default function AutoPostingPage() {
         throw new Error(data.message || '자동 포스팅에 실패했습니다.');
       }
 
-      // 각 포스트의 필수 필드 확인
-      const validPosts = data.posts.filter((post: Post) => 
-        post._id &&
-        post.title &&
-        post.content &&
-        post.keywords &&
-        Array.isArray(post.keywords)
-      );
-
-      if (validPosts.length === 0) {
-        throw new Error('생성된 포스트가 없습니다.');
-      }
-
-      setSuccess(`${validPosts.length}개의 포스트가 성공적으로 생성되었습니다.`);
+      setSuccess(`${data.count}개의 포스트가 성공적으로 생성되었습니다.`);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : '자동 포스팅 중 오류가 발생했습니다.');
@@ -70,6 +63,21 @@ export default function AutoPostingPage() {
         <p className="mb-4">
           자동 포스팅 기능을 사용하면 GPT를 활용하여 새로운 포스트를 자동으로 생성할 수 있습니다.
         </p>
+
+        <div className="mb-4">
+          <label htmlFor="keywordCount" className="block text-sm font-medium text-gray-700 mb-2">
+            생성할 포스트 개수 (1-5)
+          </label>
+          <input
+            type="number"
+            id="keywordCount"
+            min="1"
+            max="5"
+            value={keywordCount}
+            onChange={(e) => setKeywordCount(Math.min(5, Math.max(1, parseInt(e.target.value) || 1)))}
+            className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
         
         <button
           onClick={handleAutoPosting}
