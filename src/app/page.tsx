@@ -50,6 +50,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [visiblePosts, setVisiblePosts] = useState(8);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -79,6 +80,10 @@ export default function Home() {
     );
   });
 
+  const handleLoadMore = () => {
+    setVisiblePosts(prev => prev + 8);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -91,7 +96,7 @@ export default function Home() {
               placeholder="제목, 내용, 키워드로 검색"
             />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[...Array(8)].map((_, index) => (
               <div key={index} className="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div className="relative w-full pt-[56.25%] bg-gray-200 animate-pulse" />
@@ -116,7 +121,6 @@ export default function Home() {
       <Header />
       
       <main className="container mx-auto px-4 pt-16 sm:pt-20 pb-8 sm:pb-12">
-        {/* 검색 섹션 */}
         <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
           <SearchInput
             value={searchQuery}
@@ -125,15 +129,13 @@ export default function Home() {
           />
         </div>
 
-        {/* 포스트 그리드 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-          {filteredPosts.map(post => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {filteredPosts.slice(0, visiblePosts).map(post => (
             <Link
               key={post._id}
               href={`/post/${post.slug || post._id}`}
               className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col h-full transform hover:-translate-y-1"
             >
-              {/* 이미지 배경 */}
               <div className="relative w-full pt-[56.25%]">
                 <Image
                   src={post.imageUrl || '/images/default-post-image.jpg'}
@@ -142,16 +144,13 @@ export default function Home() {
                   className="object-cover"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   onError={(e) => {
-                    console.error('이미지 로드 실패:', post.imageUrl);
                     const imgElement = e.currentTarget as HTMLImageElement;
                     imgElement.src = '/images/default-post-image.jpg';
                   }}
                 />
               </div>
 
-              {/* 텍스트 콘텐츠 */}
               <div className="p-4 flex flex-col flex-grow">
-                {/* 키워드 태그 */}
                 <div className="flex flex-wrap gap-1 mb-2">
                   {post.keywords.slice(0, 3).map((keyword) => (
                     <span
@@ -163,17 +162,14 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* 제목 */}
                 <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
                   {post.title}
                 </h2>
                 
-                {/* 요약 내용 */}
                 <p className="text-sm text-gray-600 line-clamp-2 mb-4 flex-grow">
                   {removeMarkdown(post.content)}
                 </p>
 
-                {/* 메타 정보 */}
                 <div className="flex items-center justify-between text-xs text-gray-500 mt-auto pt-4 border-t border-gray-100">
                   <span>
                     {formatDistanceToNow(new Date(post.createdAt), {
@@ -196,6 +192,17 @@ export default function Home() {
             </Link>
           ))}
         </div>
+
+        {filteredPosts.length > visiblePosts && (
+          <div className="mt-8 text-center">
+            <button
+              onClick={handleLoadMore}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              더보기
+            </button>
+          </div>
+        )}
 
         {filteredPosts.length === 0 && (
           <div className="text-center text-gray-500 py-8">
