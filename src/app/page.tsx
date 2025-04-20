@@ -81,7 +81,31 @@ export default function Home() {
   });
 
   if (loading) {
-    return <div className="text-center py-8">포스트를 불러오는 중...</div>;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="container mx-auto px-4 pt-16 sm:pt-20 pb-8 sm:pb-12">
+          <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="제목, 내용, 키워드로 검색"
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            {[...Array(8)].map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div className="relative w-full pt-[56.25%] bg-gray-200 animate-pulse" />
+                <div className="p-4">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-2" />
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (error) {
