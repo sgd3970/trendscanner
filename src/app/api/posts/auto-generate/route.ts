@@ -77,7 +77,6 @@ export async function POST(request: Request) {
           키워드: ${keyword}
           `;
 
-
         const gptResponse = await openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           messages: [{ role: 'user', content: prompt }],
