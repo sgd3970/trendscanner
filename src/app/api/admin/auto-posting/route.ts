@@ -23,16 +23,16 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       message: '포스트가 성공적으로 생성되었습니다.',
-      post: {
+      posts: [{
         _id: post._id,
         title: post.title,
         content: post.content,
         keywords: post.keywords,
         imageUrl: post.imageUrl,
-      },
+      }],
     });
   } catch (error) {
-    console.error('자동 생성 오류:', error);
+    console.error('자동 포스팅 오류:', error);
     return NextResponse.json(
       {
         success: false,
