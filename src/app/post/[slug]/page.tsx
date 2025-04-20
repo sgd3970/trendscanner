@@ -5,8 +5,10 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
 import Image from 'next/image';
+import Link from 'next/link';
 import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import Comments from '@/components/Comments';
 
 interface Post {
@@ -24,6 +26,7 @@ export default function PostDetail({ params }: { params: { slug: string } }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isLiked, setIsLiked] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -104,45 +107,68 @@ export default function PostDetail({ params }: { params: { slug: string } }) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <article className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6">{post.title}</h1>
-        
-        <div className="relative aspect-[16/9] w-full mb-8">
-          <Image
-            src={post.imageUrl}
-            alt={post.title}
-            fill
-            className="object-cover rounded-lg"
-            priority
-          />
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* 뒤로가기 버튼 */}
+        <Link 
+          href="/"
+          className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors duration-200"
+        >
+          <ArrowLeftIcon className="w-5 h-5 mr-2" />
+          <span className="text-sm sm:text-base">목록으로 돌아가기</span>
+        </Link>
 
-        <div className="prose prose-lg max-w-none">
-          <ReactMarkdown>{post.content}</ReactMarkdown>
-        </div>
+        <article className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="p-4 sm:p-6 md:p-8">
+            {/* 제목 */}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              {post.title}
+            </h1>
+            
+            {/* 날짜와 좋아요 */}
+            <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
+              <time dateTime={post.createdAt}>
+                {format(new Date(post.createdAt), 'PPP', { locale: ko })}
+              </time>
+              <button
+                onClick={handleLike}
+                className="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors duration-200"
+              >
+                {isLiked ? (
+                  <HeartIconSolid className="w-5 h-5 text-red-500" />
+                ) : (
+                  <HeartIcon className="w-5 h-5" />
+                )}
+                <span>{post.likes}</span>
+              </button>
+            </div>
 
-        <div className="mt-8 flex items-center justify-between">
-          <div className="text-gray-500">
-            {format(new Date(post.createdAt), 'PPP', { locale: ko })}
-          </div>
-          <button
-            onClick={handleLike}
-            className="flex items-center space-x-1 text-gray-500 hover:text-red-500"
-          >
-            {isLiked ? (
-              <HeartIconSolid className="w-6 h-6 text-red-500" />
-            ) : (
-              <HeartIcon className="w-6 h-6" />
+            {/* 이미지 */}
+            {!imageError && post.imageUrl && (
+              <div className="relative aspect-[16/9] w-full mb-6 rounded-lg overflow-hidden">
+                <Image
+                  src={post.imageUrl}
+                  alt={post.title}
+                  fill
+                  className="object-cover"
+                  priority
+                  onError={() => setImageError(true)}
+                />
+              </div>
             )}
-            <span>{post.likes}</span>
-          </button>
-        </div>
 
-        <div className="mt-12">
-          <Comments postId={post._id} />
-        </div>
-      </article>
+            {/* 본문 */}
+            <div className="prose prose-sm sm:prose lg:prose-lg max-w-none">
+              <ReactMarkdown>{post.content}</ReactMarkdown>
+            </div>
+          </div>
+
+          {/* 댓글 섹션 */}
+          <div className="border-t border-gray-100 bg-gray-50 p-4 sm:p-6 md:p-8">
+            <Comments postId={post._id} />
+          </div>
+        </article>
+      </div>
     </div>
   );
 } 

@@ -92,9 +92,9 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <main className="container mx-auto px-4 pt-20 pb-12">
+      <main className="container mx-auto px-4 pt-16 sm:pt-20 pb-8 sm:pb-12">
         {/* 검색 섹션 */}
-        <div className="max-w-2xl mx-auto mb-8">
+        <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
@@ -103,21 +103,21 @@ export default function Home() {
         </div>
 
         {/* 포스트 그리드 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredPosts.map(post => (
             <Link
               key={post._id}
               href={`/post/${post.slug || post._id}`}
-              className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden flex flex-col"
+              className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col h-full transform hover:-translate-y-1"
             >
               {/* 이미지 배경 */}
-              <div className="relative w-full h-48">
+              <div className="relative w-full pt-[56.25%]">
                 <Image
                   src={post.imageUrl || '/images/default-post-image.jpg'}
                   alt={post.title}
                   fill
-                  className="object-cover rounded-t-lg"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   onError={(e) => {
                     console.error('이미지 로드 실패:', post.imageUrl);
                     const imgElement = e.currentTarget as HTMLImageElement;
@@ -128,32 +128,44 @@ export default function Home() {
 
               {/* 텍스트 콘텐츠 */}
               <div className="p-4 flex flex-col flex-grow">
+                {/* 키워드 태그 */}
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {post.keywords.slice(0, 3).map((keyword) => (
+                    <span
+                      key={keyword}
+                      className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full"
+                    >
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+
                 {/* 제목 */}
-                <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
                   {post.title}
                 </h2>
                 
                 {/* 요약 내용 */}
-                <p className="text-sm text-gray-600 line-clamp-2 mb-4">
+                <p className="text-sm text-gray-600 line-clamp-2 mb-4 flex-grow">
                   {removeMarkdown(post.content)}
                 </p>
 
-                {/* 메타 */}
-                <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                {/* 메타 정보 */}
+                <div className="flex items-center justify-between text-xs text-gray-500 mt-auto pt-4 border-t border-gray-100">
                   <span>
                     {formatDistanceToNow(new Date(post.createdAt), {
                       addSuffix: true,
                       locale: ko,
                     })}
                   </span>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3">
                     <div className="flex items-center">
-                      <FaEye className="mr-1" />
-                      <span>{post.views}</span>
+                      <FaEye className="w-3.5 h-3.5 mr-1 text-gray-400" />
+                      <span>{post.views.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center text-red-500">
-                      <FaHeart className="mr-1" />
-                      <span>{post.likes}</span>
+                      <FaHeart className="w-3.5 h-3.5 mr-1" />
+                      <span>{post.likes.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
