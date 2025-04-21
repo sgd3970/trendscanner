@@ -1,9 +1,31 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
   siteUrl: 'https://trend-scanner.com',
-  generateRobotsTxt: false, // robots.txt는 이미 생성했으므로 false로 설정
+  generateRobotsTxt: true,
   changefreq: 'daily',
   priority: 0.7,
   sitemapSize: 7000,
-  exclude: ['/admin/*'], // 관리자 페이지 제외
+  exclude: [
+    '/admin/*',
+    '/api/*',
+    '/404',
+    '/500',
+  ],
+  robotsTxtOptions: {
+    policies: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: [
+          '/admin/',
+          '/api/',
+          '/404',
+          '/500',
+        ],
+      },
+    ],
+    additionalSitemaps: [
+      'https://trend-scanner.com/sitemap.xml',
+    ],
+  },
 } 
