@@ -42,6 +42,8 @@ export default function RootLayout({
     <html lang="ko">
       <head>
         <meta name="google-adsense-account" content="ca-pub-8478624096187058"></meta>
+        <meta name="naver-site-verification" content="7794be19a9d2c4a99d7710a812047b89b47c4e71" />
+        <meta name="google-site-verification" content="MWziquIMM3rKz13WfDcm08INXd5085FqqebR2TZ572g" />
       </head>
       <body className={inter.className}>{children}</body>
     </html>
