@@ -1,12 +1,13 @@
-# Allow all web crawlers
+# *
 User-agent: *
 Allow: /
-
-# Disallow admin and API routes
 Disallow: /admin/
 Disallow: /api/
 Disallow: /404
 Disallow: /500
 
-# Sitemap
-Sitemap: https://trend-scanner.com/sitemap.xml 
+# Host
+Host: https://trend-scanner.com
+
+# Sitemaps
+Sitemap: https://trend-scanner.com/sitemap.xml
