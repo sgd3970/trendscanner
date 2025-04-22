@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     const trendingKeywords = data.trending_searches
       .map((item: any) => item.query)
       .filter(isValidKeyword)
-      .slice(0, 30);
+      .slice(0, 60);
 
     if (trendingKeywords.length === 0) {
       throw new Error('트렌딩 키워드를 찾을 수 없습니다.');

@@ -21,4 +21,4 @@ jobs:
         run: |
           curl -L -X POST https://trend-scanner.com/api/posts/auto-generate \
           -H "Content-Type: application/json" \
-          -d '{"keywordCount": 1}'
+          -d '{"keywordCount": 2}'
