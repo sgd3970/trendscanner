@@ -2,8 +2,8 @@ name: Auto Posting & Keyword Tasks
 
 on:
   schedule:
-    - cron: '0 0,12 * * *'     # 매일 0시, 12시
-    - cron: '*/30 * * * *'     # 매 30분마다
+    - cron: '0 0,12 * * *'
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -12,13 +12,13 @@ jobs:
 
     steps:
       - name: 🔄 키워드 삭제
-        run: curl -X DELETE https://trend-scanner.com/api/keywords/delete-all
+        run: curl -L -X DELETE https://trend-scanner.com/api/keywords/delete-all
 
       - name: 🔄 키워드 생성
-        run: curl -X POST https://trend-scanner.com/api/keywords/collect
+        run: curl -L -X POST https://trend-scanner.com/api/keywords/collect
 
       - name: 📝 자동 포스팅
         run: |
-          curl -X POST https://trend-scanner.com/api/posts/auto-generate \
+          curl -L -X POST https://trend-scanner.com/api/posts/auto-generate \
           -H "Content-Type: application/json" \
           -d '{"keywordCount": 1}'
