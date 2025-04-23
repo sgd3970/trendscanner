@@ -10,11 +10,6 @@ export const runtime = 'nodejs';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: '인증되지 않은 요청입니다.' }, { status: 401 });
-    }
-
     await connectDB();
     const db = mongoose.connection.db;
     if (!db) {
@@ -88,7 +83,7 @@ export async function GET() {
       .aggregate([
         {
           $group: {
-            _id: '$source',
+            _id: '$category',
             views: { $sum: '$viewCount' }
           }
         }
@@ -131,7 +126,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error('대시보드 데이터 조회 오류:', error);
-    // 더 자세한 에러 메시지 반환
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
     return NextResponse.json(
       { error: `대시보드 데이터 조회 중 오류가 발생했습니다: ${errorMessage}` },
