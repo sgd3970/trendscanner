@@ -112,6 +112,18 @@ export default function AdminLayout({
             </Link>
 
             <Link
+              href="/admin/posting"
+              className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                pathname === '/admin/posting'
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <PencilSquareIcon className="w-5 h-5 mr-3" />
+              <span>쿠팡 포스팅</span>
+            </Link>
+
+            <Link
               href="/"
               className="flex items-center px-4 py-2 rounded-lg transition-colors text-gray-600 hover:bg-gray-50"
             >

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Post from '@/models/Post';
+import mongoose from 'mongoose';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -8,9 +8,12 @@ export const revalidate = 0;
 export async function GET() {
   try {
     await connectDB();
-    const posts = await Post.find()
-      .sort({ createdAt: -1 })
-      .lean();
+    const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error('데이터베이스 연결에 실패했습니다.');
+    }
+
+    const posts = await db.collection('posts').find().sort({ createdAt: -1 }).toArray();
 
     return NextResponse.json(
       posts.map(post => ({
@@ -24,6 +27,7 @@ export async function GET() {
         imageUrl: post.imageUrl || undefined,
         gptImageUrl: post.gptImageUrl || undefined,
         featuredImage: post.featuredImage || undefined,
+        category: post.source || 'trend'  // source 필드를 category로 사용
       }))
     );
   } catch (error) {
