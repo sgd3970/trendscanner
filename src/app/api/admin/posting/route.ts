@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../lib/auth';
-import connectDB from '../../../lib/mongodb';
+import { authOptions } from '@/lib/auth';
+import connectDB from '@/lib/mongodb';
 import mongoose from 'mongoose';
 import { ObjectId } from 'mongodb';
 
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       content,
       tags: tags || [],
       imageUrl,
-      authorId: new ObjectId(session.user.id),
+      authorId: '관리자',
       createdAt: new Date(),
       updatedAt: new Date(),
       viewCount: 0,

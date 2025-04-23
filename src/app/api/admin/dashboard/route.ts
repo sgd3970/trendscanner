@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../lib/auth';
-import connectDB from '../../../lib/mongodb';
+import { authOptions } from '@/lib/auth';
+import connectDB from '@/lib/mongodb';
 import mongoose from 'mongoose';
 import Post from '@/models/Post';
 import Comment from '@/models/Comment';
