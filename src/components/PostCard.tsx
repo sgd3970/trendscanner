@@ -5,7 +5,8 @@ import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { FaEye, FaHeart } from 'react-icons/fa';
-import { formatDate } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface PostCardProps {
   id: string;
@@ -17,6 +18,21 @@ interface PostCardProps {
   likes: number;
   category: string;
   thumbnailUrl?: string;
+}
+
+// 마크다운 문법 제거 함수
+function removeMarkdown(text: string): string {
+  return text
+    .replace(/!\[.*?\]\(.*?\)/g, '') // 이미지 제거
+    .replace(/\[.*?\]\(.*?\)/g, '') // 링크 제거
+    .replace(/#{1,6}\s?/g, '') // 제목 문법 제거
+    .replace(/(\*\*|__)(.*?)\1/g, '$2') // 볼드 처리 제거
+    .replace(/(\*|_)(.*?)\1/g, '$2') // 이탤릭 처리 제거
+    .replace(/~~.*?~~/g, '') // 취소선 제거
+    .replace(/`{1,3}.*?`{1,3}/g, '') // 코드 블록 제거
+    .replace(/\n/g, ' ') // 줄바꿈을 공백으로 변경
+    .replace(/\s+/g, ' ') // 연속된 공백을 하나로 변경
+    .trim();
 }
 
 export default function PostCard({
@@ -34,6 +50,9 @@ export default function PostCard({
     addSuffix: true,
     locale: ko,
   });
+
+  // 마크다운 텍스트를 일반 텍스트로 변환
+  const plainDescription = removeMarkdown(description);
 
   return (
     <Link
@@ -63,7 +82,7 @@ export default function PostCard({
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-4">
         {/* 키워드 태그 */}
         <div className="flex flex-wrap gap-2 mb-4">
           {keywords.map((keyword) => (
@@ -82,9 +101,11 @@ export default function PostCard({
         </h2>
 
         {/* 내용 미리보기 */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-          {description}
-        </p>
+        <div className="prose prose-sm max-w-none mb-4">
+          <div className="line-clamp-3 text-gray-600">
+            {plainDescription}
+          </div>
+        </div>
 
         {/* 메타 정보 */}
         <div className="flex justify-between items-center text-sm">
