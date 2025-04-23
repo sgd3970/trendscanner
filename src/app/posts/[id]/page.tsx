@@ -1,18 +1,20 @@
+'use client';
+
 import { Metadata } from 'next';
 import PostDetail from '@/components/PostDetail';
 import Comments from '@/components/Comments';
 import { FaSpinner } from 'react-icons/fa';
 import { notFound } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface PostPageProps {
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
 }
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
-  const { id } = await params;
+  const { id } = params;
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}`);
   const post = await response.json();
 
@@ -28,39 +30,55 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   };
 }
 
-export default async function PostPage({ params }: PostPageProps) {
-  const { id } = await params;
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}`, {
-    next: { revalidate: 60 },
-  });
-
-  if (!response.ok) {
-    notFound();
-  }
-
-  const post = await response.json();
+export default function PostPage({ params }: PostPageProps) {
+  const [post, setPost] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const incrementView = async () => {
+    const fetchPost = async () => {
       try {
-        await fetch(`/api/posts/${id}/view`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${params.id}`);
+        
+        if (!response.ok) {
+          notFound();
+        }
+
+        const data = await response.json();
+        setPost(data);
+        setLoading(false);
+
+        // 조회수 증가
+        await fetch(`/api/posts/${params.id}/view`, {
           method: 'POST',
         });
       } catch (error) {
-        console.error('조회수 증가 오류:', error);
+        console.error('게시글 로딩 오류:', error);
+        setLoading(false);
       }
     };
 
-    incrementView();
-  }, [id]);
+    fetchPost();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <FaSpinner className="animate-spin text-4xl text-gray-500" />
+      </div>
+    );
+  }
+
+  if (!post) {
+    return notFound();
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <PostDetail post={post} />
       
       <div className="mt-12">
-        <Comments postId={id} />
+        <Comments postId={params.id} />
       </div>
     </div>
   );
-} 
+}
