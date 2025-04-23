@@ -1,24 +1,24 @@
-name: Auto Posting & Keyword Tasks
+# name: Auto Posting & Keyword Tasks
 
-on:
-  schedule:
-    - cron: '0 0,12 * * *'
-    - cron: '*/30 * * * *'
-  workflow_dispatch:
+# on:
+#   schedule:
+#     - cron: '0 0,12 * * *'
+#     - cron: '*/30 * * * *'
+#   workflow_dispatch:
 
-jobs:
-  run-tasks:
-    runs-on: ubuntu-latest
+# jobs:
+#   run-tasks:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: 🔄 키워드 삭제
-        run: curl -L -X DELETE https://trend-scanner.com/api/keywords/delete-all
+#     steps:
+#       - name: 🔄 키워드 삭제
+#         run: curl -L -X DELETE https://trend-scanner.com/api/keywords/delete-all
 
-      - name: 🔄 키워드 생성
-        run: curl -L -X POST https://trend-scanner.com/api/keywords/collect
+#       - name: 🔄 키워드 생성
+#         run: curl -L -X POST https://trend-scanner.com/api/keywords/collect
 
-      - name: 📝 자동 포스팅
-        run: |
-          curl -L -X POST https://trend-scanner.com/api/posts/auto-generate \
-          -H "Content-Type: application/json" \
-          -d '{"keywordCount": 2}'
+#       - name: 📝 자동 포스팅
+#         run: |
+#           curl -L -X POST https://trend-scanner.com/api/posts/auto-generate \
+#           -H "Content-Type: application/json" \
+#           -d '{"keywordCount": 2}'
