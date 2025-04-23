@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import connectDB from '@/lib/mongodb';
+import { authOptions } from '../../../lib/auth';
+import connectDB from '../../../lib/mongodb';
 import mongoose from 'mongoose';
 import Post from '@/models/Post';
 import Comment from '@/models/Comment';
@@ -19,6 +19,9 @@ export async function GET() {
 
     await connectDB();
     const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error('데이터베이스 연결에 실패했습니다.');
+    }
     
     // 전체 게시글 수
     const totalPosts = await db.collection('posts').countDocuments();

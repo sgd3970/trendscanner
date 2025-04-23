@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import connectDB from '@/lib/mongodb';
+import { authOptions } from '../../../lib/auth';
+import connectDB from '../../../lib/mongodb';
 import mongoose from 'mongoose';
 import { ObjectId } from 'mongodb';
 
@@ -20,6 +20,10 @@ export async function POST(req: Request) {
 
     await connectDB();
     const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error('데이터베이스 연결에 실패했습니다.');
+    }
+
     const result = await db.collection('posts').insertOne({
       title,
       content,
