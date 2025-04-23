@@ -10,6 +10,11 @@ const postSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  category: {
+    type: String,
+    enum: ['trend', 'coupang'],
+    default: 'trend'
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -33,6 +38,15 @@ const postSchema = new mongoose.Schema({
   },
   imageUrl: {
     type: String,
+    trim: true
+  },
+  videoUrl: {
+    type: String,
+    trim: true
+  },
+  images: {
+    type: [String],
+    default: [],
     trim: true
   },
   gptImageUrl: {

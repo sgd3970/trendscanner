@@ -26,6 +26,39 @@ export async function GET() {
       .populate('postId', 'title')
       .select('content author createdAt postId');
 
+    // 카테고리별 조회수
+    const viewsByCategory = await Post.aggregate([
+      {
+        $group: {
+          _id: '$category',
+          totalViews: { $sum: '$views' }
+        }
+      }
+    ]);
+
+    // 일일 조회수 (최근 7일)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const viewsByDate = await Post.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sevenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+          },
+          views: { $sum: '$views' }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
     return NextResponse.json({
       totalPosts,
       totalComments,
@@ -35,7 +68,7 @@ export async function GET() {
         views: post.views
       })),
       recentComments: recentComments
-        .filter(comment => comment.postId) // null인 postId 필터링
+        .filter(comment => comment.postId)
         .map(comment => ({
           id: comment._id,
           content: comment.content,
@@ -43,7 +76,15 @@ export async function GET() {
           postId: comment.postId?._id || 'deleted',
           postTitle: comment.postId?.title || '삭제된 게시글',
           createdAt: comment.createdAt
-        }))
+        })),
+      viewsByCategory: {
+        trend: viewsByCategory.find(cat => cat._id === 'trend')?.totalViews || 0,
+        coupang: viewsByCategory.find(cat => cat._id === 'coupang')?.totalViews || 0
+      },
+      viewsByDate: viewsByDate.map(item => ({
+        date: item._id,
+        views: item.views
+      }))
     });
   } catch (error) {
     console.error('대시보드 데이터 조회 중 오류 발생:', error);

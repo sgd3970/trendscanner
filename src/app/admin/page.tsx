@@ -1,19 +1,35 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { FaNewspaper, FaComments, FaChartLine, FaMagic } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { FaNewspaper, FaComments, FaChartLine, FaMagic } from 'react-icons/fa';
+import { Line, Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface DashboardStats {
   totalPosts: number;
   totalComments: number;
-  recentPosts: Array<{
-    id: string;
-    title: string;
-    createdAt: string;
-    views: number;
-  }>;
   topPosts: Array<{
     id: string;
     title: string;
@@ -27,69 +43,119 @@ interface DashboardStats {
     postTitle: string;
     createdAt: string;
   }>;
+  viewsByCategory: {
+    trend: number;
+    coupang: number;
+  };
+  viewsByDate: Array<{
+    date: string;
+    views: number;
+  }>;
 }
 
 export default function AdminPage() {
-  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [posts, setPosts] = useState([]);
-  const [keywords, setKeywords] = useState([]);
-  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
-    fetchData();
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/admin/dashboard');
+        if (!response.ok) {
+          throw new Error('대시보드 데이터를 불러오는데 실패했습니다.');
+        }
+        const data = await response.json();
+        setStats(data);
+      } catch (error) {
+        console.error('대시보드 데이터 로드 오류:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
   }, []);
 
-  const fetchData = async () => {
-    try {
-      const [postsRes, keywordsRes, commentsRes] = await Promise.all([
-        fetch('/api/posts'),
-        fetch('/api/keywords'),
-        fetch('/api/admin/comments')
-      ]);
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
-      const postsData = await postsRes.json();
-      const keywordsData = await keywordsRes.json();
-      const commentsData = await commentsRes.json();
-
-      setPosts(postsData);
-      setKeywords(keywordsData);
-      setComments(commentsData);
-    } catch (_) {
-      console.error('데이터 불러오기 실패');
-    }
+  const viewsChartData = {
+    labels: stats?.viewsByDate.map(item => item.date) || [],
+    datasets: [
+      {
+        label: '일일 조회수',
+        data: stats?.viewsByDate.map(item => item.views) || [],
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.5)',
+      },
+    ],
   };
 
-  const handleCollectKeywords = async () => {
-    try {
-      const response = await fetch('/api/keywords/collect', {
-        method: 'POST'
-      });
-      if (response.ok) {
-        await fetchData();
-      }
-    } catch (_) {
-      console.error('키워드 수집 실패');
-    }
+  const categoryChartData = {
+    labels: ['트렌드', '쿠팡'],
+    datasets: [
+      {
+        label: '카테고리별 조회수',
+        data: [
+          stats?.viewsByCategory.trend || 0,
+          stats?.viewsByCategory.coupang || 0,
+        ],
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.5)',
+          'rgba(16, 185, 129, 0.5)',
+        ],
+        borderColor: [
+          'rgb(59, 130, 246)',
+          'rgb(16, 185, 129)',
+        ],
+        borderWidth: 1,
+      },
+    ],
   };
 
-  const handleGeneratePost = async () => {
+  const handleUpdateCategories = async () => {
+    if (!confirm('모든 기존 포스트의 카테고리를 "trend"로 변경하시겠습니까?')) {
+      return;
+    }
+
+    setUpdating(true);
     try {
-      const response = await fetch('/api/admin/posting', {
-        method: 'POST'
+      const response = await fetch('/api/admin/posts/update-categories', {
+        method: 'POST',
       });
-      if (response.ok) {
-        await fetchData();
+
+      if (!response.ok) {
+        throw new Error('카테고리 업데이트에 실패했습니다.');
       }
-    } catch (_) {
-      console.error('게시글 생성 실패');
+
+      const data = await response.json();
+      alert(data.message);
+      window.location.reload();
+    } catch (error) {
+      console.error('카테고리 업데이트 오류:', error);
+      alert('카테고리 업데이트 중 오류가 발생했습니다.');
+    } finally {
+      setUpdating(false);
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
+        <button
+          onClick={handleUpdateCategories}
+          disabled={updating}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+        >
+          {updating ? '업데이트 중...' : '카테고리 업데이트'}
+        </button>
       </div>
 
       {/* 통계 카드 */}
@@ -118,13 +184,52 @@ export default function AdminPage() {
           <h3 className="text-gray-600">SERP 키워드</h3>
         </Link>
 
-        <Link href="/admin/auto-posting" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+        <Link href="/admin/auto-post" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <FaMagic className="text-yellow-500 text-2xl" />
             <span className="text-2xl font-bold">자동 포스팅</span>
           </div>
           <h3 className="text-gray-600">GPT 포스팅</h3>
         </Link>
+      </div>
+
+      {/* 차트 섹션 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-xl font-semibold mb-4">일일 조회수 추이</h2>
+          <div className="h-80">
+            <Line
+              data={viewsChartData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-xl font-semibold mb-4">카테고리별 조회수</h2>
+          <div className="h-80">
+            <Bar
+              data={categoryChartData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -150,18 +255,20 @@ export default function AdminPage() {
           <h2 className="text-xl font-semibold mb-4">최근 댓글</h2>
           <div className="space-y-4">
             {stats?.recentComments?.map((comment) => (
-              <div key={comment.id} className="p-3 hover:bg-gray-50 rounded-lg">
+              <div key={comment.id} className="p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-900">{comment.author}</span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(comment.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">{comment.content}</p>
                 <Link 
                   href={`/admin/posts/${comment.postId}`}
-                  className="text-sm text-blue-600 hover:underline mb-1 block"
+                  className="text-xs text-blue-600 hover:text-blue-800"
                 >
                   {comment.postTitle}
                 </Link>
-                <p className="text-gray-800 text-sm mb-1">{comment.content}</p>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>{comment.author}</span>
-                  <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
-                </div>
               </div>
             ))}
           </div>

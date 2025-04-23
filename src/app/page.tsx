@@ -8,6 +8,7 @@ import { ko } from 'date-fns/locale';
 import { FaEye, FaHeart } from 'react-icons/fa';
 import Header from '@/components/Header';
 import SearchInput from '@/components/SearchInput';
+import PostCard from '@/components/PostCard';
 
 // 마크다운 문법 제거 함수
 function removeMarkdown(text: string): string {
@@ -43,6 +44,7 @@ interface Post {
     };
   };
   slug?: string;
+  category: string;
 }
 
 export default function Home() {
@@ -50,7 +52,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [visiblePosts, setVisiblePosts] = useState(8);
+  const [visibleTrendPosts, setVisibleTrendPosts] = useState(4);
+  const [visibleCoupangPosts, setVisibleCoupangPosts] = useState(2);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -80,8 +83,12 @@ export default function Home() {
     );
   });
 
+  const trendPosts = filteredPosts.filter(post => post.category === 'trend');
+  const coupangPosts = filteredPosts.filter(post => post.category === 'coupang');
+
   const handleLoadMore = () => {
-    setVisiblePosts(prev => prev + 8);
+    setVisibleTrendPosts(prev => prev + 4);
+    setVisibleCoupangPosts(prev => prev + 2);
   };
 
   if (loading) {
@@ -129,71 +136,43 @@ export default function Home() {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {filteredPosts.slice(0, visiblePosts).map(post => (
-            <Link
-              key={post._id}
-              href={`/post/${post.slug || post._id}`}
-              className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col h-full transform hover:-translate-y-1"
-            >
-              <div className="relative w-full pt-[56.25%]">
-                <Image
-                  src={post.imageUrl || '/images/default-post-image.jpg'}
-                  alt={post.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  onError={(e) => {
-                    const imgElement = e.currentTarget as HTMLImageElement;
-                    imgElement.src = '/images/default-post-image.jpg';
-                  }}
-                />
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {/* Trend 포스트 (1, 2열) */}
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {trendPosts.slice(0, visibleTrendPosts).map(post => (
+              <PostCard
+                key={post._id}
+                id={post._id}
+                title={post.title}
+                description={post.content.substring(0, 150)}
+                createdAt={post.createdAt}
+                keywords={post.keywords}
+                views={post.views}
+                likes={post.likes}
+                category={post.category}
+              />
+            ))}
+          </div>
 
-              <div className="p-4 flex flex-col flex-grow">
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {post.keywords.slice(0, 3).map((keyword) => (
-                    <span
-                      key={keyword}
-                      className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-
-                <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
-                  {post.title}
-                </h2>
-                
-                <p className="text-sm text-gray-600 line-clamp-2 mb-4 flex-grow">
-                  {removeMarkdown(post.content)}
-                </p>
-
-                <div className="flex items-center justify-between text-xs text-gray-500 mt-auto pt-4 border-t border-gray-100">
-                  <span>
-                    {formatDistanceToNow(new Date(post.createdAt), {
-                      addSuffix: true,
-                      locale: ko,
-                    })}
-                  </span>
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center">
-                      <FaEye className="w-3.5 h-3.5 mr-1 text-gray-400" />
-                      <span>{post.views.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center text-red-500">
-                      <FaHeart className="w-3.5 h-3.5 mr-1" />
-                      <span>{post.likes.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
+          {/* Coupang 포스트 (3열) */}
+          <div className="grid grid-cols-1 gap-4">
+            {coupangPosts.slice(0, visibleCoupangPosts).map(post => (
+              <PostCard
+                key={post._id}
+                id={post._id}
+                title={post.title}
+                description={post.content.substring(0, 150)}
+                createdAt={post.createdAt}
+                keywords={post.keywords}
+                views={post.views}
+                likes={post.likes}
+                category={post.category}
+              />
+            ))}
+          </div>
         </div>
 
-        {filteredPosts.length > visiblePosts && (
+        {(trendPosts.length > visibleTrendPosts || coupangPosts.length > visibleCoupangPosts) && (
           <div className="mt-8 text-center">
             <button
               onClick={handleLoadMore}

@@ -14,9 +14,10 @@ interface PostCardProps {
   keywords: string[];
   views: number;
   likes: number;
+  category: string;
 }
 
-export default function PostCard({ id, title, description, createdAt, keywords, views, likes }: PostCardProps) {
+export default function PostCard({ id, title, description, createdAt, keywords, views, likes, category }: PostCardProps) {
   const formattedDate = formatDistanceToNow(new Date(createdAt), {
     addSuffix: true,
     locale: ko,
@@ -28,6 +29,19 @@ export default function PostCard({ id, title, description, createdAt, keywords, 
       className="group block bg-white rounded-xl border border-gray-100 hover:border-blue-100 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 overflow-hidden transform hover:-translate-y-1"
     >
       <div className="p-6">
+        {/* 카테고리 태그 */}
+        <div className="mb-4">
+          <span
+            className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+              category === 'trend'
+                ? 'bg-blue-100 text-blue-800'
+                : 'bg-green-100 text-green-800'
+            }`}
+          >
+            {category === 'trend' ? '트렌드' : '쿠팡'}
+          </span>
+        </div>
+
         {/* 키워드 태그 */}
         <div className="flex flex-wrap gap-2 mb-4">
           {keywords.map((keyword) => (
