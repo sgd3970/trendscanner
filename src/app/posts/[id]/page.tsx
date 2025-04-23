@@ -3,6 +3,7 @@ import PostDetail from '@/components/PostDetail';
 import Comments from '@/components/Comments';
 import { FaSpinner } from 'react-icons/fa';
 import { notFound } from 'next/navigation';
+import { useEffect } from 'react';
 
 interface PostPageProps {
   params: Promise<{
@@ -38,6 +39,20 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const post = await response.json();
+
+  useEffect(() => {
+    const incrementView = async () => {
+      try {
+        await fetch(`/api/posts/${id}/view`, {
+          method: 'POST',
+        });
+      } catch (error) {
+        console.error('조회수 증가 오류:', error);
+      }
+    };
+
+    incrementView();
+  }, [id]);
 
   return (
     <div className="container mx-auto px-4 py-8">

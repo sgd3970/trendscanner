@@ -2,45 +2,105 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Post from '@/models/Post';
 import Comment from '@/models/Comment';
+import View from '@/models/View';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
   try {
     await connectDB();
 
-    // 총 포스트 수
+    // 전체 포스트 수
     const totalPosts = await Post.countDocuments();
-    
-    // 총 댓글 수
-    const totalComments = await Comment.countDocuments();
-    
-    // 인기 게시글 (조회수 기준 상위 5개)
-    const topPosts = await Post.find()
-      .sort({ views: -1 })
-      .limit(5)
-      .select('title views _id');
-    
-    // 최근 댓글 (최근 5개)
-    const recentComments = await Comment.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('postId', 'title')
-      .select('content author createdAt postId');
 
-    // 카테고리별 조회수
-    const viewsByCategory = await Post.aggregate([
+    // 전체 댓글 수
+    const totalComments = await Comment.countDocuments();
+
+    // 인기 게시글 (조회수 기준 상위 5개)
+    const topPosts = await Post.aggregate([
       {
-        $group: {
-          _id: '$category',
-          totalViews: { $sum: '$views' }
+        $lookup: {
+          from: 'views',
+          localField: '_id',
+          foreignField: 'postId',
+          as: 'views'
+        }
+      },
+      {
+        $addFields: {
+          viewCount: { $size: '$views' }
+        }
+      },
+      {
+        $sort: { viewCount: -1 }
+      },
+      {
+        $limit: 5
+      },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          viewCount: 1
         }
       }
     ]);
 
-    // 일일 조회수 (최근 7일)
+    // 최근 댓글 (최근 5개)
+    const recentComments = await Comment.aggregate([
+      {
+        $sort: { createdAt: -1 }
+      },
+      {
+        $limit: 5
+      },
+      {
+        $lookup: {
+          from: 'posts',
+          localField: 'postId',
+          foreignField: '_id',
+          as: 'post'
+        }
+      },
+      {
+        $unwind: '$post'
+      },
+      {
+        $project: {
+          _id: 1,
+          content: 1,
+          author: 1,
+          postId: 1,
+          postTitle: '$post.title',
+          createdAt: 1
+        }
+      }
+    ]);
+
+    // 카테고리별 조회수
+    const viewsByCategory = await Post.aggregate([
+      {
+        $lookup: {
+          from: 'views',
+          localField: '_id',
+          foreignField: 'postId',
+          as: 'views'
+        }
+      },
+      {
+        $group: {
+          _id: '$category',
+          views: { $sum: { $size: '$views' } }
+        }
+      }
+    ]);
+
+    // 일별 조회수 (최근 7일)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const viewsByDate = await Post.aggregate([
+    const viewsByDate = await View.aggregate([
       {
         $match: {
           createdAt: { $gte: sevenDaysAgo }
@@ -51,43 +111,56 @@ export async function GET() {
           _id: {
             $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
           },
-          views: { $sum: '$views' }
+          views: { $sum: 1 }
         }
       },
       {
         $sort: { _id: 1 }
+      },
+      {
+        $project: {
+          date: '$_id',
+          views: 1,
+          _id: 0
+        }
       }
     ]);
+
+    // 카테고리별 조회수 데이터 정리
+    const categoryViews = {
+      trend: 0,
+      coupang: 0
+    };
+
+    viewsByCategory.forEach(category => {
+      if (category._id === 'trend') {
+        categoryViews.trend = category.views;
+      } else if (category._id === 'coupang') {
+        categoryViews.coupang = category.views;
+      }
+    });
 
     return NextResponse.json({
       totalPosts,
       totalComments,
       topPosts: topPosts.map(post => ({
-        id: post._id,
+        id: post._id.toString(),
         title: post.title,
-        views: post.views
+        views: post.viewCount
       })),
-      recentComments: recentComments
-        .filter(comment => comment.postId)
-        .map(comment => ({
-          id: comment._id,
-          content: comment.content,
-          author: comment.author,
-          postId: comment.postId?._id || 'deleted',
-          postTitle: comment.postId?.title || '삭제된 게시글',
-          createdAt: comment.createdAt
-        })),
-      viewsByCategory: {
-        trend: viewsByCategory.find(cat => cat._id === 'trend')?.totalViews || 0,
-        coupang: viewsByCategory.find(cat => cat._id === 'coupang')?.totalViews || 0
-      },
-      viewsByDate: viewsByDate.map(item => ({
-        date: item._id,
-        views: item.views
-      }))
+      recentComments: recentComments.map(comment => ({
+        id: comment._id.toString(),
+        content: comment.content,
+        author: comment.author,
+        postId: comment.postId.toString(),
+        postTitle: comment.postTitle,
+        createdAt: comment.createdAt
+      })),
+      viewsByCategory: categoryViews,
+      viewsByDate
     });
   } catch (error) {
-    console.error('대시보드 데이터 조회 중 오류 발생:', error);
+    console.error('대시보드 데이터 로드 오류:', error);
     return NextResponse.json(
       { error: '대시보드 데이터를 불러오는데 실패했습니다.' },
       { status: 500 }
