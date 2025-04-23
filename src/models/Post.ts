@@ -49,6 +49,10 @@ const postSchema = new mongoose.Schema({
     default: [],
     trim: true
   },
+  thumbnailUrl: {
+    type: String,
+    trim: true
+  },
   gptImageUrl: {
     type: String,
   },
@@ -81,6 +85,15 @@ const postSchema = new mongoose.Schema({
   },
 }, {
   timestamps: true,
+});
+
+// 썸네일 URL 자동 설정
+postSchema.pre('save', function(next) {
+  // 이미지가 있을 경우 첫 번째 이미지를 썸네일로 설정
+  if (this.images && this.images.length > 0) {
+    this.thumbnailUrl = this.images[0];
+  }
+  next();
 });
 
 // 업데이트 시 updatedAt 필드 자동 갱신

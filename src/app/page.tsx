@@ -35,6 +35,7 @@ interface Post {
   likes: number;
   imageUrl?: string;
   gptImageUrl?: string;
+  thumbnailUrl?: string;
   featuredImage?: {
     url: string;
     alt: string;
@@ -150,6 +151,7 @@ export default function Home() {
                 views={post.views}
                 likes={post.likes}
                 category={post.category}
+                thumbnailUrl={post.thumbnailUrl || post.imageUrl || post.gptImageUrl || post.featuredImage?.url}
               />
             ))}
           </div>
@@ -167,6 +169,7 @@ export default function Home() {
                 views={post.views}
                 likes={post.likes}
                 category={post.category}
+                thumbnailUrl={post.thumbnailUrl || post.imageUrl || post.gptImageUrl || post.featuredImage?.url}
               />
             ))}
           </div>

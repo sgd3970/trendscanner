@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+export const runtime = 'nodejs';
 
 export async function GET() {
   try {
@@ -130,8 +131,10 @@ export async function GET() {
     });
   } catch (error) {
     console.error('대시보드 데이터 조회 오류:', error);
+    // 더 자세한 에러 메시지 반환
+    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
     return NextResponse.json(
-      { error: '대시보드 데이터 조회 중 오류가 발생했습니다.' },
+      { error: `대시보드 데이터 조회 중 오류가 발생했습니다: ${errorMessage}` },
       { status: 500 }
     );
   }
