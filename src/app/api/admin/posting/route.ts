@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { connectToDatabase } from '@/lib/mongodb';
+import connectDB from '@/lib/mongodb';
+import mongoose from 'mongoose';
 import { ObjectId } from 'mongodb';
 
 export async function POST(req: Request) {
@@ -17,7 +18,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '제목과 내용은 필수입니다.' }, { status: 400 });
     }
 
-    const { db } = await connectToDatabase();
+    await connectDB();
+    const db = mongoose.connection.db;
     const result = await db.collection('posts').insertOne({
       title,
       content,

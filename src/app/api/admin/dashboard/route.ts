@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { connectToDatabase } from '@/lib/mongodb';
+import connectDB from '@/lib/mongodb';
+import mongoose from 'mongoose';
 import Post from '@/models/Post';
 import Comment from '@/models/Comment';
 import View from '@/models/View';
@@ -16,7 +17,8 @@ export async function GET() {
       return NextResponse.json({ error: '인증되지 않은 요청입니다.' }, { status: 401 });
     }
 
-    const { db } = await connectToDatabase();
+    await connectDB();
+    const db = mongoose.connection.db;
     
     // 전체 게시글 수
     const totalPosts = await db.collection('posts').countDocuments();
