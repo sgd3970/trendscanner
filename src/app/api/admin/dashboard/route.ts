@@ -3,9 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
 import mongoose from 'mongoose';
-import Post from '@/models/Post';
-import Comment from '@/models/Comment';
-import View from '@/models/View';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -44,116 +41,57 @@ export async function GET() {
     ]).toArray();
 
     // 전체 댓글 수
-    const totalComments = await Comment.countDocuments();
+    const totalComments = await db.collection('comments').countDocuments();
 
     // 인기 게시글 (조회수 기준 상위 5개)
-    const topPosts = await Post.aggregate([
-      {
-        $lookup: {
-          from: 'views',
-          localField: '_id',
-          foreignField: 'postId',
-          as: 'views'
-        }
-      },
-      {
-        $addFields: {
-          viewCount: { $size: '$views' }
-        }
-      },
-      {
-        $sort: { viewCount: -1 }
-      },
-      {
-        $limit: 5
-      },
-      {
-        $project: {
-          _id: 1,
-          title: 1,
-          viewCount: 1
-        }
-      }
-    ]);
+    const topPosts = await db.collection('posts')
+      .find()
+      .sort({ viewCount: -1 })
+      .limit(5)
+      .toArray();
 
     // 최근 댓글 (최근 5개)
-    const recentComments = await Comment.aggregate([
-      {
-        $sort: { createdAt: -1 }
-      },
-      {
-        $limit: 5
-      },
-      {
-        $lookup: {
-          from: 'posts',
-          localField: 'postId',
-          foreignField: '_id',
-          as: 'post'
+    const recentComments = await db.collection('comments')
+      .aggregate([
+        {
+          $sort: { createdAt: -1 }
+        },
+        {
+          $limit: 5
+        },
+        {
+          $lookup: {
+            from: 'posts',
+            localField: 'postId',
+            foreignField: '_id',
+            as: 'post'
+          }
+        },
+        {
+          $unwind: '$post'
+        },
+        {
+          $project: {
+            _id: 1,
+            content: 1,
+            author: 1,
+            postId: 1,
+            postTitle: '$post.title',
+            createdAt: 1
+          }
         }
-      },
-      {
-        $unwind: '$post'
-      },
-      {
-        $project: {
-          _id: 1,
-          content: 1,
-          author: 1,
-          postId: 1,
-          postTitle: '$post.title',
-          createdAt: 1
-        }
-      }
-    ]);
+      ]).toArray();
 
     // 카테고리별 조회수
-    const viewsByCategory = await Post.aggregate([
-      {
-        $lookup: {
-          from: 'views',
-          localField: '_id',
-          foreignField: 'postId',
-          as: 'views'
+    const viewsByCategory = await db.collection('posts')
+      .aggregate([
+        {
+          $group: {
+            _id: '$source',
+            views: { $sum: '$viewCount' }
+          }
         }
-      },
-      {
-        $group: {
-          _id: '$category',
-          views: { $sum: { $size: '$views' } }
-        }
-      }
-    ]);
-
-    // 일별 조회수 (최근 7일)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const viewsByDate = await View.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: sevenDaysAgo }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
-          },
-          views: { $sum: 1 }
-        }
-      },
-      {
-        $sort: { _id: 1 }
-      },
-      {
-        $project: {
-          date: '$_id',
-          views: 1,
-          _id: 0
-        }
-      }
-    ]);
+      ]).toArray();
 
     // 카테고리별 조회수 데이터 정리
     const categoryViews = {
@@ -178,7 +116,7 @@ export async function GET() {
       topPosts: topPosts.map(post => ({
         id: post._id.toString(),
         title: post.title,
-        views: post.viewCount
+        views: post.viewCount || 0
       })),
       recentComments: recentComments.map(comment => ({
         id: comment._id.toString(),
@@ -188,8 +126,7 @@ export async function GET() {
         postTitle: comment.postTitle,
         createdAt: comment.createdAt
       })),
-      viewsByCategory: categoryViews,
-      viewsByDate
+      viewsByCategory: categoryViews
     });
   } catch (error) {
     console.error('대시보드 데이터 조회 오류:', error);
