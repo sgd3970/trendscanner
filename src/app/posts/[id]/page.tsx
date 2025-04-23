@@ -8,7 +8,10 @@ import Link from 'next/link';
 import { FaEye, FaHeart, FaRegHeart, FaArrowLeft } from 'react-icons/fa';
 import Header from '@/components/Header';
 import Comments from '@/components/Comments';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import type { Components } from 'react-markdown';
 
 interface Post {
   _id: string;
@@ -23,36 +26,63 @@ interface Post {
   images?: string[];
 }
 
-export default function PostPage({ params }: { params: { id: string } }) {
+const ImageRenderer: Components['img'] = (props) => {
+  const { src, alt } = props;
+  if (!src) return null;
+  
+  return (
+    <div className="my-8">
+      <div className="relative w-full h-[400px]">
+        <Image
+          src={src}
+          alt={alt || ''}
+          fill
+          className="object-contain rounded-lg"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+      </div>
+      {alt && (
+        <div className="text-center text-sm text-gray-500 mt-2">
+          {alt}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function PostPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { id } = useParams();
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await fetch(`/api/posts/${params.id}`);
+        const response = await fetch(`/api/posts/${id}`);
         if (!response.ok) {
-          throw new Error('포스트를 불러오는데 실패했습니다.');
+          throw new Error('Failed to fetch post');
         }
         const data = await response.json();
         setPost(data);
         
-        // 조회수 증가
-        await fetch(`/api/posts/${params.id}/view`, { method: 'POST' });
+        // 조회수 증가 API 호출
+        await fetch(`/api/posts/${id}/views`, {
+          method: 'POST',
+        });
         
         // 좋아요 상태 확인
         const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
-        setIsLiked(likedPosts.includes(params.id));
+        setIsLiked(likedPosts.includes(id));
       } catch (error) {
-        console.error('포스트 로딩 오류:', error);
+        console.error('Error fetching post:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPost();
-  }, [params.id]);
+  }, [id]);
 
   const handleLike = async () => {
     if (!post) return;
@@ -87,13 +117,15 @@ export default function PostPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
-  if (!post) return notFound();
+  if (!post) {
+    return <div>Post not found</div>;
+  }
 
   const formattedDate = formatDistanceToNow(new Date(post.createdAt), {
     addSuffix: true,
@@ -156,12 +188,30 @@ export default function PostPage({ params }: { params: { id: string } }) {
                     />
                   </div>
                 )}
-                <div className="prose max-w-none">
-                  {post.content.split('\n').map((paragraph, index) => (
-                    <p key={index} className="mb-4">
-                      {paragraph}
-                    </p>
-                  ))}
+                <div className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600">
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      img: ImageRenderer,
+                      p: ({ children }) => <p className="mb-4 text-gray-700">{children}</p>,
+                      h1: ({ children }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-2xl font-bold mt-6 mb-3">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-xl font-bold mt-5 mb-2">{children}</h3>,
+                      ul: ({ children }) => <ul className="list-disc list-inside mb-4">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal list-inside mb-4">{children}</ol>,
+                      blockquote: ({ children }) => (
+                        <blockquote className="border-l-4 border-gray-200 pl-4 italic my-4">{children}</blockquote>
+                      ),
+                      code: ({ children }) => (
+                        <code className="bg-gray-100 rounded px-1 py-0.5 text-sm font-mono">{children}</code>
+                      ),
+                      pre: ({ children }) => (
+                        <pre className="bg-gray-100 rounded p-4 overflow-x-auto my-4">{children}</pre>
+                      ),
+                    }}
+                  >
+                    {post.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             )}
@@ -173,28 +223,51 @@ export default function PostPage({ params }: { params: { id: string } }) {
                   <div className="aspect-video w-full mb-6">
                     <iframe
                       src={post.videoUrl}
-                      className="w-full h-full"
+                      className="w-full h-full rounded-lg"
                       allowFullScreen
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     />
                   </div>
                 )}
-                {post.images && post.images.map((image, index) => (
-                  <div key={index} className="relative aspect-[16/9] w-full overflow-hidden rounded-lg">
-                    <Image
-                      src={image}
-                      alt={`${post.title} - 이미지 ${index + 1}`}
-                      fill
-                      className="object-cover"
-                    />
+                {post.images && post.images.length > 0 && (
+                  <div className="grid grid-cols-1 gap-6">
+                    {post.images.map((image, index) => (
+                      <div key={index} className="relative aspect-[16/9] w-full overflow-hidden rounded-lg">
+                        <Image
+                          src={image}
+                          alt={`${post.title} - 이미지 ${index + 1}`}
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
-                <div className="prose max-w-none">
-                  {post.content.split('\n').map((paragraph, index) => (
-                    <p key={index} className="mb-4">
-                      {paragraph}
-                    </p>
-                  ))}
+                )}
+                <div className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600">
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      img: ImageRenderer,
+                      p: ({ children }) => <p className="mb-4 text-gray-700">{children}</p>,
+                      h1: ({ children }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-2xl font-bold mt-6 mb-3">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-xl font-bold mt-5 mb-2">{children}</h3>,
+                      ul: ({ children }) => <ul className="list-disc list-inside mb-4">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal list-inside mb-4">{children}</ol>,
+                      blockquote: ({ children }) => (
+                        <blockquote className="border-l-4 border-gray-200 pl-4 italic my-4">{children}</blockquote>
+                      ),
+                      code: ({ children }) => (
+                        <code className="bg-gray-100 rounded px-1 py-0.5 text-sm font-mono">{children}</code>
+                      ),
+                      pre: ({ children }) => (
+                        <pre className="bg-gray-100 rounded p-4 overflow-x-auto my-4">{children}</pre>
+                      ),
+                    }}
+                  >
+                    {post.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             )}
