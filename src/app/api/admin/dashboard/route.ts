@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { connectToDatabase } from '@/lib/mongodb';
 import Post from '@/models/Post';
 import Comment from '@/models/Comment';
 import View from '@/models/View';
@@ -9,10 +11,32 @@ export const revalidate = 0;
 
 export async function GET() {
   try {
-    await connectDB();
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: '인증되지 않은 요청입니다.' }, { status: 401 });
+    }
 
-    // 전체 포스트 수
-    const totalPosts = await Post.countDocuments();
+    const { db } = await connectToDatabase();
+    
+    // 전체 게시글 수
+    const totalPosts = await db.collection('posts').countDocuments();
+    
+    // 총 조회수
+    const totalViews = await db.collection('posts').aggregate([
+      { $group: { _id: null, total: { $sum: '$viewCount' } } }
+    ]).toArray();
+    
+    // 오늘 작성된 글 수
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayPosts = await db.collection('posts').countDocuments({
+      createdAt: { $gte: today }
+    });
+    
+    // 총 좋아요 수
+    const totalLikes = await db.collection('posts').aggregate([
+      { $group: { _id: null, total: { $sum: '$likeCount' } } }
+    ]).toArray();
 
     // 전체 댓글 수
     const totalComments = await Comment.countDocuments();
@@ -142,6 +166,9 @@ export async function GET() {
 
     return NextResponse.json({
       totalPosts,
+      totalViews: totalViews[0]?.total || 0,
+      todayPosts,
+      totalLikes: totalLikes[0]?.total || 0,
       totalComments,
       topPosts: topPosts.map(post => ({
         id: post._id.toString(),
@@ -160,9 +187,9 @@ export async function GET() {
       viewsByDate
     });
   } catch (error) {
-    console.error('대시보드 데이터 로드 오류:', error);
+    console.error('대시보드 데이터 조회 오류:', error);
     return NextResponse.json(
-      { error: '대시보드 데이터를 불러오는데 실패했습니다.' },
+      { error: '대시보드 데이터 조회 중 오류가 발생했습니다.' },
       { status: 500 }
     );
   }
