@@ -209,10 +209,18 @@ export default function PostingPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               내용
             </label>
+            <div className="mb-2 text-sm text-gray-500">
+              다음 태그를 사용하여 미디어를 삽입할 수 있습니다:
+              <ul className="list-disc list-inside mt-1">
+                <li>[영상] - 유튜브 영상 삽입</li>
+                <li>[이미지1], [이미지2], ... - 업로드한 이미지 삽입</li>
+              </ul>
+            </div>
             <textarea
               value={formData.content}
               onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-40"
+              placeholder="내용을 입력하세요. [영상]과 [이미지1] 등의 태그를 사용하여 미디어를 삽입할 수 있습니다."
               required
             />
           </div>

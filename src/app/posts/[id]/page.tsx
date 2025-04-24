@@ -50,6 +50,41 @@ const ImageRenderer: Components['img'] = (props) => {
   );
 };
 
+// 미디어 태그를 HTML로 변환하는 함수
+const renderContent = (content: string, videoUrl: string | null, images: string[]) => {
+  let result = content;
+
+  // 영상 태그 변환
+  if (videoUrl) {
+    const embedUrl = videoUrl.replace('watch?v=', 'embed/');
+    result = result.replace('[영상]', `
+      <div class="aspect-video w-full mb-6">
+        <iframe
+          src="${embedUrl}"
+          class="w-full h-full rounded-lg"
+          allowFullScreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        ></iframe>
+      </div>
+    `);
+  }
+
+  // 이미지 태그 변환
+  images.forEach((url, i) => {
+    result = result.replace(`[이미지${i + 1}]`, `
+      <div class="relative aspect-[16/9] w-full mb-6">
+        <img
+          src="${url}"
+          alt="이미지 ${i + 1}"
+          class="rounded-lg object-contain w-full h-full"
+        />
+      </div>
+    `);
+  });
+
+  return result;
+};
+
 export default function PostPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [isLiked, setIsLiked] = useState(false);
@@ -219,55 +254,16 @@ export default function PostPage() {
             {/* 쿠팡 포스트 */}
             {post.category === 'coupang' && (
               <div className="space-y-6">
-                {post.videoUrl && (
-                  <div className="aspect-video w-full mb-6">
-                    <iframe
-                      src={post.videoUrl}
-                      className="w-full h-full rounded-lg"
-                      allowFullScreen
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    />
-                  </div>
-                )}
-                {post.images && post.images.length > 0 && (
-                  <div className="grid grid-cols-1 gap-6">
-                    {post.images.map((image, index) => (
-                      <div key={index} className="relative aspect-[16/9] w-full overflow-hidden rounded-lg">
-                        <Image
-                          src={image}
-                          alt={`${post.title} - 이미지 ${index + 1}`}
-                          fill
-                          className="object-contain"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
                 <div className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600">
-                  <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      img: ImageRenderer,
-                      p: ({ children }) => <p className="mb-4 text-gray-700">{children}</p>,
-                      h1: ({ children }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
-                      h2: ({ children }) => <h2 className="text-2xl font-bold mt-6 mb-3">{children}</h2>,
-                      h3: ({ children }) => <h3 className="text-xl font-bold mt-5 mb-2">{children}</h3>,
-                      ul: ({ children }) => <ul className="list-disc list-inside mb-4">{children}</ul>,
-                      ol: ({ children }) => <ol className="list-decimal list-inside mb-4">{children}</ol>,
-                      blockquote: ({ children }) => (
-                        <blockquote className="border-l-4 border-gray-200 pl-4 italic my-4">{children}</blockquote>
-                      ),
-                      code: ({ children }) => (
-                        <code className="bg-gray-100 rounded px-1 py-0.5 text-sm font-mono">{children}</code>
-                      ),
-                      pre: ({ children }) => (
-                        <pre className="bg-gray-100 rounded p-4 overflow-x-auto my-4">{children}</pre>
-                      ),
-                    }}
-                  >
-                    {post.content}
-                  </ReactMarkdown>
+                  <div 
+                    dangerouslySetInnerHTML={{ 
+                      __html: renderContent(
+                        post.content,
+                        post.videoUrl || null,
+                        post.images || []
+                      )
+                    }} 
+                  />
                 </div>
               </div>
             )}

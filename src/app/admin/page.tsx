@@ -119,38 +119,11 @@ export default function AdminPage() {
     ],
   };
 
-  const handleUpdateCategories = async () => {
-    if (!confirm('모든 기존 포스트의 카테고리를 "trend"로 변경하시겠습니까?')) {
-      return;
-    }
-
-    setUpdating(true);
-    try {
-      const response = await fetch('/api/admin/posts/update-categories', {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error('카테고리 업데이트에 실패했습니다.');
-      }
-
-      const data = await response.json();
-      alert(data.message);
-      window.location.reload();
-    } catch (error) {
-      console.error('카테고리 업데이트 오류:', error);
-      alert('카테고리 업데이트 중 오류가 발생했습니다.');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
-        <button
-          onClick={handleUpdateCategories}
+        <button          
           disabled={updating}
           className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
         >
