@@ -86,11 +86,11 @@ export default function AdminPage() {
   }
 
   const viewsChartData = {
-    labels: stats?.viewsByDate.map(item => item.date) || [],
+    labels: stats?.viewsByDate?.map(item => item.date) ?? [],
     datasets: [
       {
         label: '일일 조회수',
-        data: stats?.viewsByDate.map(item => item.views) || [],
+        data: stats?.viewsByDate?.map(item => item.views) ?? [],
         borderColor: 'rgb(59, 130, 246)',
         backgroundColor: 'rgba(59, 130, 246, 0.5)',
       },
