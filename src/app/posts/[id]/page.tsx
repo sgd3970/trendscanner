@@ -30,15 +30,23 @@ const ImageRenderer: Components['img'] = (props) => {
   const { src, alt } = props;
   if (!src) return null;
   
+  // 이미지 URL이 상대 경로인 경우 기본 URL 추가
+  const imageUrl = src.startsWith('http') ? src : `${process.env.NEXT_PUBLIC_BASE_URL || ''}${src}`;
+  
   return (
     <div className="my-8">
       <div className="relative w-full h-[400px]">
         <Image
-          src={src}
+          src={imageUrl}
           alt={alt || ''}
           fill
           className="object-contain rounded-lg"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          onError={(e) => {
+            // 이미지 로드 실패 시 기본 이미지로 대체
+            const target = e.target as HTMLImageElement;
+            target.src = '/images/default-image.jpg';
+          }}
         />
       </div>
       {alt && (
@@ -71,12 +79,19 @@ const renderContent = (content: string, videoUrl: string | null, images: string[
 
   // 이미지 태그 변환
   images.forEach((url, i) => {
+    const imageUrl = url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_BASE_URL || ''}${url}`;
     result = result.replace(`[이미지${i + 1}]`, `
       <div class="relative aspect-[16/9] w-full mb-6">
-        <img
-          src="${url}"
+        <Image
+          src="${imageUrl}"
           alt="이미지 ${i + 1}"
-          class="rounded-lg object-contain w-full h-full"
+          fill
+          className="rounded-lg object-contain"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = '/images/default-image.jpg';
+          }}
         />
       </div>
     `);
@@ -198,82 +213,49 @@ export default function PostPage() {
               <span className="mx-2">•</span>
               <button
                 onClick={handleLike}
-                className="flex items-center focus:outline-none"
+                className="flex items-center"
               >
                 {isLiked ? (
-                  <FaHeart className="w-4 h-4 mr-1 text-red-500" />
+                  <FaHeart className="w-4 h-4 text-red-500 mr-1" />
                 ) : (
-                  <FaRegHeart className="w-4 h-4 mr-1" />
+                  <FaRegHeart className="w-4 h-4 text-gray-400 mr-1" />
                 )}
                 <span>{post.likes}</span>
               </button>
             </div>
 
-            {/* 트렌드 포스트 */}
-            {post.category === 'trend' && (
-              <div className="space-y-6">
-                {post.thumbnailUrl && (
-                  <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg">
-                    <Image
-                      src={post.thumbnailUrl}
-                      alt={post.title}
-                      fill
-                      className="object-cover"
-                      priority
-                    />
-                  </div>
-                )}
-                <div className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600">
-                  <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      img: ImageRenderer,
-                      p: ({ children }) => <p className="mb-4 text-gray-700">{children}</p>,
-                      h1: ({ children }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
-                      h2: ({ children }) => <h2 className="text-2xl font-bold mt-6 mb-3">{children}</h2>,
-                      h3: ({ children }) => <h3 className="text-xl font-bold mt-5 mb-2">{children}</h3>,
-                      ul: ({ children }) => <ul className="list-disc list-inside mb-4">{children}</ul>,
-                      ol: ({ children }) => <ol className="list-decimal list-inside mb-4">{children}</ol>,
-                      blockquote: ({ children }) => (
-                        <blockquote className="border-l-4 border-gray-200 pl-4 italic my-4">{children}</blockquote>
-                      ),
-                      code: ({ children }) => (
-                        <code className="bg-gray-100 rounded px-1 py-0.5 text-sm font-mono">{children}</code>
-                      ),
-                      pre: ({ children }) => (
-                        <pre className="bg-gray-100 rounded p-4 overflow-x-auto my-4">{children}</pre>
-                      ),
-                    }}
-                  >
-                    {post.content}
-                  </ReactMarkdown>
-                </div>
+            {/* 썸네일 이미지 */}
+            {post.thumbnailUrl && (
+              <div className="relative w-full aspect-[16/9] mb-8">
+                <Image
+                  src={post.thumbnailUrl.startsWith('http') ? post.thumbnailUrl : `${process.env.NEXT_PUBLIC_BASE_URL || ''}${post.thumbnailUrl}`}
+                  alt={post.title}
+                  fill
+                  className="object-cover rounded-lg"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/images/default-thumbnail.jpg';
+                  }}
+                />
               </div>
             )}
 
-            {/* 쿠팡 포스트 */}
-            {post.category === 'coupang' && (
-              <div className="space-y-6">
-                <div className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600">
-                  <div 
-                    dangerouslySetInnerHTML={{ 
-                      __html: renderContent(
-                        post.content,
-                        post.videoUrl || null,
-                        post.images || []
-                      )
-                    }} 
-                  />
-                </div>
-              </div>
-            )}
+            {/* 본문 내용 */}
+            <div className="prose prose-lg max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  img: ImageRenderer,
+                }}
+              >
+                {renderContent(post.content, post.videoUrl || null, post.images || [])}
+              </ReactMarkdown>
+            </div>
           </div>
         </article>
 
-        {/* 댓글 섹션 */}
-        <div className="mt-8 max-w-4xl mx-auto">
-          <Comments postId={post._id} />
-        </div>
+        <Comments postId={post._id} />
       </main>
     </div>
   );
