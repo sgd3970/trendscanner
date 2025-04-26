@@ -30,15 +30,29 @@ const ImageRenderer: Components['img'] = (props) => {
   const { src, alt } = props;
   if (!src) return null;
   
+  // 이미지 URL 처리
+  const imageUrl = src.startsWith('http') 
+    ? src 
+    : src.startsWith('/') 
+      ? `${process.env.NEXT_PUBLIC_BASE_URL || ''}${src}`
+      : `/${src}`;
+  
+  console.log('Rendering image with URL:', imageUrl); // 디버깅용 로그
+
   return (
     <div className="my-8">
       <div className="relative w-full aspect-[16/9]">
         <Image
-          src={src}
+          src={imageUrl}
           alt={alt || ''}
           fill
           className="object-contain rounded-lg"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          onError={(e) => {
+            console.error('Image load error:', imageUrl); // 디버깅용 로그
+            const target = e.target as HTMLImageElement;
+            target.src = '/images/default-image.jpg';
+          }}
         />
       </div>
       {alt && (
@@ -53,6 +67,9 @@ const ImageRenderer: Components['img'] = (props) => {
 // 미디어 태그를 HTML로 변환하는 함수
 const renderContent = (content: string, videoUrl: string | null, images: string[]) => {
   let result = content;
+  
+  console.log('Content before processing:', content); // 디버깅용 로그
+  console.log('Available images:', images); // 디버깅용 로그
 
   // 영상 태그 변환
   if (videoUrl) {
@@ -71,9 +88,17 @@ const renderContent = (content: string, videoUrl: string | null, images: string[
 
   // 이미지 태그 변환
   images.forEach((url, i) => {
-    result = result.replace(`[이미지${i + 1}]`, `![이미지 ${i + 1}](${url})`);
+    const imageUrl = url.startsWith('http') 
+      ? url 
+      : url.startsWith('/') 
+        ? `${process.env.NEXT_PUBLIC_BASE_URL || ''}${url}`
+        : `/${url}`;
+    
+    console.log(`Converting image ${i + 1}:`, imageUrl); // 디버깅용 로그
+    result = result.replace(`[이미지${i + 1}]`, `![이미지 ${i + 1}](${imageUrl})`);
   });
 
+  console.log('Content after processing:', result); // 디버깅용 로그
   return result;
 };
 
@@ -91,6 +116,7 @@ export default function PostPage() {
           throw new Error('Failed to fetch post');
         }
         const data = await response.json();
+        console.log('Fetched post data:', data); // 디버깅용 로그
         setPost(data);
         
         // 조회수 증가 API 호출
