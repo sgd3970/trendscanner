@@ -65,13 +65,30 @@ const renderContent = (content: string, videoUrl: string | null, images: string[
   // 영상 태그 변환
   if (videoUrl) {
     const embedUrl = videoUrl.replace('watch?v=', 'embed/');
-    result = result.replace('[영상]', `![video](${embedUrl})`);
+    result = result.replace('[영상]', `
+      <div class="aspect-video w-full mb-6">
+        <iframe
+          src="${embedUrl}"
+          class="w-full h-full rounded-lg"
+          allowFullScreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        ></iframe>
+      </div>
+    `);
   }
 
   // 이미지 태그 변환
   images.forEach((url, i) => {
     const imageUrl = url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_BASE_URL || ''}${url}`;
-    result = result.replace(`[이미지${i + 1}]`, `![이미지 ${i + 1}](${imageUrl})`);
+    result = result.replace(`[이미지${i + 1}]`, `
+      <div class="relative w-full aspect-[16/9] mb-6">
+        <img
+          src="${imageUrl}"
+          alt="이미지 ${i + 1}"
+          class="w-full h-full object-contain rounded-lg"
+        />
+      </div>
+    `);
   });
 
   return result;
@@ -228,10 +245,33 @@ export default function PostPage() {
                   overflow: 'hidden'
                 }}
               >
+                <div 
+                  dangerouslySetInnerHTML={{ 
+                    __html: renderContent(post.content, post.videoUrl || null, post.images || []) 
+                  }}
+                />
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    img: ImageRenderer,
+                    img: ({ src, alt }) => {
+                      if (!src) return null;
+                      const imageUrl = src.startsWith('http') ? src : `${process.env.NEXT_PUBLIC_BASE_URL || ''}${src}`;
+                      return (
+                        <div className="relative w-full aspect-[16/9] mb-6">
+                          <Image
+                            src={imageUrl}
+                            alt={alt || ''}
+                            fill
+                            className="object-contain rounded-lg"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/images/default-image.jpg';
+                            }}
+                          />
+                        </div>
+                      );
+                    },
                     p: ({ children }) => <p className="mb-4 text-gray-700">{children}</p>,
                     h1: ({ children }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
                     h2: ({ children }) => <h2 className="text-2xl font-bold mt-6 mb-3">{children}</h2>,
@@ -249,7 +289,7 @@ export default function PostPage() {
                     ),
                   }}
                 >
-                  {renderContent(post.content, post.videoUrl || null, post.images || [])}
+                  {post.content}
                 </ReactMarkdown>
               </div>
             </div>
