@@ -30,23 +30,15 @@ const ImageRenderer: Components['img'] = (props) => {
   const { src, alt } = props;
   if (!src) return null;
   
-  // 이미지 URL이 상대 경로인 경우 기본 URL 추가
-  const imageUrl = src.startsWith('http') ? src : `${process.env.NEXT_PUBLIC_BASE_URL || ''}${src}`;
-  
   return (
     <div className="my-8">
-      <div className="relative w-full h-[400px]">
+      <div className="relative w-full aspect-[16/9]">
         <Image
-          src={imageUrl}
+          src={src}
           alt={alt || ''}
           fill
           className="object-contain rounded-lg"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          onError={(e) => {
-            // 이미지 로드 실패 시 기본 이미지로 대체
-            const target = e.target as HTMLImageElement;
-            target.src = '/images/default-image.jpg';
-          }}
         />
       </div>
       {alt && (
@@ -79,16 +71,7 @@ const renderContent = (content: string, videoUrl: string | null, images: string[
 
   // 이미지 태그 변환
   images.forEach((url, i) => {
-    const imageUrl = url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_BASE_URL || ''}${url}`;
-    result = result.replace(`[이미지${i + 1}]`, `
-      <div class="relative w-full aspect-[16/9] mb-6">
-        <img
-          src="${imageUrl}"
-          alt="이미지 ${i + 1}"
-          class="w-full h-full object-contain rounded-lg"
-        />
-      </div>
-    `);
+    result = result.replace(`[이미지${i + 1}]`, `![이미지 ${i + 1}](${url})`);
   });
 
   return result;
@@ -237,61 +220,29 @@ export default function PostPage() {
 
             {/* 본문 내용 */}
             <div className="prose prose-lg max-w-none">
-              <div
-                className="markdown-content"
-                style={{
-                  width: '100%',
-                  maxWidth: '100%',
-                  overflow: 'hidden'
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  img: ImageRenderer,
+                  p: ({ children }) => <p className="mb-4 text-gray-700">{children}</p>,
+                  h1: ({ children }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-2xl font-bold mt-6 mb-3">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-xl font-bold mt-5 mb-2">{children}</h3>,
+                  ul: ({ children }) => <ul className="list-disc list-inside mb-4">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal list-inside mb-4">{children}</ol>,
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-gray-200 pl-4 italic my-4">{children}</blockquote>
+                  ),
+                  code: ({ children }) => (
+                    <code className="bg-gray-100 rounded px-1 py-0.5 text-sm font-mono">{children}</code>
+                  ),
+                  pre: ({ children }) => (
+                    <pre className="bg-gray-100 rounded p-4 overflow-x-auto my-4">{children}</pre>
+                  ),
                 }}
               >
-                <div 
-                  dangerouslySetInnerHTML={{ 
-                    __html: renderContent(post.content, post.videoUrl || null, post.images || []) 
-                  }}
-                />
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    img: ({ src, alt }) => {
-                      if (!src) return null;
-                      const imageUrl = src.startsWith('http') ? src : `${process.env.NEXT_PUBLIC_BASE_URL || ''}${src}`;
-                      return (
-                        <div className="relative w-full aspect-[16/9] mb-6">
-                          <Image
-                            src={imageUrl}
-                            alt={alt || ''}
-                            fill
-                            className="object-contain rounded-lg"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = '/images/default-image.jpg';
-                            }}
-                          />
-                        </div>
-                      );
-                    },
-                    p: ({ children }) => <p className="mb-4 text-gray-700">{children}</p>,
-                    h1: ({ children }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
-                    h2: ({ children }) => <h2 className="text-2xl font-bold mt-6 mb-3">{children}</h2>,
-                    h3: ({ children }) => <h3 className="text-xl font-bold mt-5 mb-2">{children}</h3>,
-                    ul: ({ children }) => <ul className="list-disc list-inside mb-4">{children}</ul>,
-                    ol: ({ children }) => <ol className="list-decimal list-inside mb-4">{children}</ol>,
-                    blockquote: ({ children }) => (
-                      <blockquote className="border-l-4 border-gray-200 pl-4 italic my-4">{children}</blockquote>
-                    ),
-                    code: ({ children }) => (
-                      <code className="bg-gray-100 rounded px-1 py-0.5 text-sm font-mono">{children}</code>
-                    ),
-                    pre: ({ children }) => (
-                      <pre className="bg-gray-100 rounded p-4 overflow-x-auto my-4">{children}</pre>
-                    ),
-                  }}
-                >
-                  {post.content}
-                </ReactMarkdown>
-              </div>
+                {renderContent(post.content, post.videoUrl || null, post.images || [])}
+              </ReactMarkdown>
             </div>
           </div>
         </article>
