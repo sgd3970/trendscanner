@@ -65,36 +65,13 @@ const renderContent = (content: string, videoUrl: string | null, images: string[
   // 영상 태그 변환
   if (videoUrl) {
     const embedUrl = videoUrl.replace('watch?v=', 'embed/');
-    result = result.replace('[영상]', `
-      <div class="aspect-video w-full mb-6">
-        <iframe
-          src="${embedUrl}"
-          class="w-full h-full rounded-lg"
-          allowFullScreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        ></iframe>
-      </div>
-    `);
+    result = result.replace('[영상]', `![video](${embedUrl})`);
   }
 
   // 이미지 태그 변환
   images.forEach((url, i) => {
     const imageUrl = url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_BASE_URL || ''}${url}`;
-    result = result.replace(`[이미지${i + 1}]`, `
-      <div class="relative aspect-[16/9] w-full mb-6">
-        <Image
-          src="${imageUrl}"
-          alt="이미지 ${i + 1}"
-          fill
-          className="rounded-lg object-contain"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = '/images/default-image.jpg';
-          }}
-        />
-      </div>
-    `);
+    result = result.replace(`[이미지${i + 1}]`, `![이미지 ${i + 1}](${imageUrl})`);
   });
 
   return result;
@@ -243,14 +220,38 @@ export default function PostPage() {
 
             {/* 본문 내용 */}
             <div className="prose prose-lg max-w-none">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  img: ImageRenderer,
+              <div
+                className="markdown-content"
+                style={{
+                  width: '100%',
+                  maxWidth: '100%',
+                  overflow: 'hidden'
                 }}
               >
-                {renderContent(post.content, post.videoUrl || null, post.images || [])}
-              </ReactMarkdown>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    img: ImageRenderer,
+                    p: ({ children }) => <p className="mb-4 text-gray-700">{children}</p>,
+                    h1: ({ children }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-2xl font-bold mt-6 mb-3">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-xl font-bold mt-5 mb-2">{children}</h3>,
+                    ul: ({ children }) => <ul className="list-disc list-inside mb-4">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal list-inside mb-4">{children}</ol>,
+                    blockquote: ({ children }) => (
+                      <blockquote className="border-l-4 border-gray-200 pl-4 italic my-4">{children}</blockquote>
+                    ),
+                    code: ({ children }) => (
+                      <code className="bg-gray-100 rounded px-1 py-0.5 text-sm font-mono">{children}</code>
+                    ),
+                    pre: ({ children }) => (
+                      <pre className="bg-gray-100 rounded p-4 overflow-x-auto my-4">{children}</pre>
+                    ),
+                  }}
+                >
+                  {renderContent(post.content, post.videoUrl || null, post.images || [])}
+                </ReactMarkdown>
+              </div>
             </div>
           </div>
         </article>
