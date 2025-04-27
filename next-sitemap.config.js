@@ -24,8 +24,5 @@ module.exports = {
         ],
       },
     ],
-    additionalSitemaps: [
-      'https://trend-scanner.com/sitemap.xml',
-    ],
   },
-} 
+}
