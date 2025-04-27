@@ -15,7 +15,7 @@ export default function Navigation() {
   ];
 
   return (
-    <nav className="bg-white border-b border-gray-100">
+    <nav className="bg-white border-b border-gray-100 sticky top-16 z-40">
       <div className="container mx-auto px-4">
         <div className="flex justify-center space-x-8">
           {navItems.map((item) => {

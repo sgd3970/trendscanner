@@ -24,9 +24,14 @@ export default function RootLayout({
         <meta name="google-site-verification" content="MWziquIMM3rKz13WfDcm08INXd5085FqqebR2TZ572g" />
       </head>
       <body className={inter.className}>
-        <Header />
-        <Navigation />
-        {children}
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <div className="h-16"></div>
+          <Navigation />
+          <main className="flex-1">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );
