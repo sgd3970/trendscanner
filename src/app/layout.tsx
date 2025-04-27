@@ -1,36 +1,14 @@
+import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { Metadata } from 'next';
+import Header from '@/components/Header';
+import Navigation from '@/components/Navigation';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: '트렌드스캐너 | 실시간 트렌드 포스팅 플랫폼',
-  description: '트렌드스캐너는 오늘의 핫한 키워드와 최신 이슈를 실시간으로 정리한 블로그 포스팅을 제공하는 플랫폼입니다.',
-  keywords: '트렌드, 실시간 키워드, 오늘의 이슈, 핫이슈, 블로그, 자동 포스팅',
-  authors: [{ name: 'TrendScanner Team' }],
-  openGraph: {
-    title: '트렌드스캐너',
-    description: '지금 가장 주목받는 키워드를 블로그 형식으로 한눈에 확인해보세요!',
-    url: 'https://trend-scanner.com',
-    siteName: '트렌드스캐너',
-    images: [
-      {
-        url: 'https://trend-scanner.com/thumbnail.png',
-        width: 1200,
-        height: 630,
-      },
-    ],
-    locale: 'ko_KR',
-    type: 'website',
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-  icons: {
-    icon: '/favicon.ico',
-  },
+  title: '트렌드스캐너',
+  description: '최신 트렌드와 리뷰를 한눈에',
 };
 
 export default function RootLayout({
@@ -45,7 +23,11 @@ export default function RootLayout({
         <meta name="naver-site-verification" content="00b7bed801bffcea59569b4b40cfe20f2227fd44" />
         <meta name="google-site-verification" content="MWziquIMM3rKz13WfDcm08INXd5085FqqebR2TZ572g" />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <Header />
+        <Navigation />
+        {children}
+      </body>
     </html>
   );
 }
