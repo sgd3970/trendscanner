@@ -6,13 +6,17 @@ import Link from 'next/link';
 import { FaRegClock, FaRegEye } from 'react-icons/fa';
 
 interface Post {
-  id: number;
+  _id: string;
   title: string;
   content: string;
   thumbnail: string;
   category: string;
   views: number;
   createdAt: string;
+  imageUrl?: string;
+  gptImageUrl?: string;
+  featuredImage?: { url: string };
+  images?: string[];
 }
 
 export default function TrendsPage() {
@@ -70,13 +74,13 @@ export default function TrendsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {posts.slice(0, visiblePosts).map((post) => (
             <Link
-              key={post.id}
-              href={`/posts/${post.id}`}
+              key={post._id}
+              href={`/trendposts/${post._id}`}
               className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200"
             >
               <div className="relative h-48">
                 <Image
-                  src={post.thumbnail || '/placeholder.jpg'}
+                  src={post.images?.[0] || post.imageUrl || post.gptImageUrl || post.featuredImage?.url || '/placeholder.jpg'}
                   alt={post.title}
                   fill
                   className="object-cover"

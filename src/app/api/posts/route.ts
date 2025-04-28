@@ -16,9 +16,9 @@ export async function GET(request: Request) {
       throw new Error('데이터베이스 연결에 실패했습니다.');
     }
 
-    // 카테고리 필터 적용
-    const query = category ? { category } : {};
-    const posts = await db.collection('posts').find(query).sort({ createdAt: -1 }).toArray();
+    // 카테고리에 따라 다른 컬렉션 사용
+    const collectionName = category === 'trend' ? 'trendposts' : 'posts';
+    const posts = await db.collection(collectionName).find({}).sort({ createdAt: -1 }).toArray();
 
     return NextResponse.json(
       posts.map(post => ({
@@ -32,7 +32,8 @@ export async function GET(request: Request) {
         imageUrl: post.imageUrl || undefined,
         gptImageUrl: post.gptImageUrl || undefined,
         featuredImage: post.featuredImage || undefined,
-        category: post.category || 'trend'
+        category: post.category || 'trend',
+        images: Array.isArray(post.images) ? post.images : []
       }))
     );
   } catch (error) {
