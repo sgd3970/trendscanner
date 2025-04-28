@@ -38,7 +38,7 @@
   }
 
   nav a {
-    @apply ml-4 text-blue-600 no-underline hover:underline;
+    @apply ml-4 text-blue-600 no-underline;
   }
 
   .post-card {
