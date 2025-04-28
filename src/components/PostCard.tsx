@@ -57,7 +57,7 @@ export default function PostCard({
   return (
     <Link
       href={`/posts/${id}`}
-      className="group block bg-white rounded-xl border border-gray-100 hover:border-blue-100 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 overflow-hidden transform hover:-translate-y-1 h-[260px] flex flex-col"
+      className="group block bg-white rounded-xl border border-gray-100 hover:border-indigo-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden h-[260px] flex flex-col"
     >
       {/* 썸네일 이미지 */}
       <div className="relative w-full h-[140px] overflow-hidden">
@@ -73,7 +73,7 @@ export default function PostCard({
           <span
             className={`px-3 py-1 rounded-full text-sm font-medium text-white ${
               category === 'trend'
-                ? 'bg-blue-500/80'
+                ? 'bg-indigo-500/80'
                 : 'bg-green-500/80'
             }`}
           >
@@ -85,10 +85,10 @@ export default function PostCard({
       <div className="p-4 flex-1 flex flex-col">
         {/* 키워드 태그 */}
         <div className="flex flex-wrap gap-2 mb-3">
-          {keywords.map((keyword) => (
+          {keywords.slice(0, 2).map((keyword) => (
             <span
               key={keyword}
-              className="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded-full"
+              className="bg-indigo-50 text-indigo-600 text-xs px-2 py-1 rounded-full font-medium"
             >
               {keyword}
             </span>
@@ -96,7 +96,7 @@ export default function PostCard({
         </div>
 
         {/* 제목 */}
-        <h2 className="text-xl font-bold mb-3 text-gray-800 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2">
+        <h2 className="text-lg font-semibold mb-3 text-gray-800 group-hover:text-indigo-600 transition-colors duration-200 line-clamp-2">
           {title}
         </h2>
 

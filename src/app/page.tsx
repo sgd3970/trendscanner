@@ -79,30 +79,31 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="w-full max-w-[1000px] mx-auto px-4 sm:px-6 py-12">
         {/* 섹션 1: 소개 */}
-        <section className="mb-16">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">트렌드스캐너에 오신 것을 환영합니다</h1>
-          <p className="text-lg text-gray-600">
+        <section className="mb-24">
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-4">트렌드스캐너에 오신 것을 환영합니다</h1>
+          <p className="text-xl text-gray-600">
             최신 트렌드와 리뷰를 한눈에 확인하세요. 트렌드스캐너가 엄선한 콘텐츠를 제공합니다.
           </p>
         </section>
 
         {/* 섹션 2: 트렌드 뉴스 */}
-        <section className="mb-16">
-          <div className="flex justify-between items-center mb-8">
+        <section className="mb-24">
+          <div className="flex justify-between items-center mb-10">
             <h2 className="text-3xl font-bold text-gray-900">트렌드 뉴스</h2>
             <Link 
               href="/trends"
-              className="text-blue-600 hover:text-blue-800 font-semibold"
+              className="text-indigo-600 hover:text-indigo-800 font-semibold hover:underline flex items-center"
             >
-              트렌드 뉴스 전체보기 →
+              트렌드 뉴스 전체보기 
+              <span className="ml-1">→</span>
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {trendPosts.map((post) => (
-              <div key={post._id} className="w-full">
+              <div key={post._id} className="w-full transform hover:scale-105 transition-transform duration-300">
                 <PostCard
                   id={post._id}
                   title={post.title}
@@ -120,19 +121,20 @@ export default function HomePage() {
         </section>
 
         {/* 섹션 3: 쿠팡 리뷰 */}
-        <section className="mb-16">
-          <div className="flex justify-between items-center mb-8">
+        <section className="mb-24">
+          <div className="flex justify-between items-center mb-10">
             <h2 className="text-3xl font-bold text-gray-900">쿠팡 리뷰</h2>
             <Link 
               href="/reviews"
-              className="text-blue-600 hover:text-blue-800 font-semibold"
+              className="text-indigo-600 hover:text-indigo-800 font-semibold hover:underline flex items-center"
             >
-              쿠팡 리뷰 전체보기 →
+              쿠팡 리뷰 전체보기
+              <span className="ml-1">→</span>
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {coupangPosts.map((post) => (
-              <div key={post._id} className="w-full">
+              <div key={post._id} className="w-full transform hover:scale-105 transition-transform duration-300">
                 <PostCard
                   id={post._id}
                   title={post.title}
@@ -150,13 +152,13 @@ export default function HomePage() {
         </section>
 
         {/* 섹션 4: 오늘의 키워드 */}
-        <section className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">오늘의 트렌드 키워드</h2>
+        <section className="bg-gray-50 rounded-2xl shadow-sm p-10">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">오늘의 트렌드 키워드</h2>
           <div className="flex flex-wrap gap-3">
             {keywords.map((keyword, index) => (
               <span
                 key={index}
-                className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full text-sm font-semibold hover:bg-indigo-100 transition-colors duration-200"
               >
                 #{keyword}
               </span>
