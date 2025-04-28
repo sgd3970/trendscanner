@@ -57,7 +57,7 @@ export default function PostCard({
   return (
     <Link
       href={`/posts/${id}`}
-      className="group block bg-white rounded-xl border border-gray-100 hover:border-blue-100 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 overflow-hidden transform hover:-translate-y-1"
+      className="group block bg-white rounded-xl border border-gray-100 hover:border-blue-100 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 overflow-hidden transform hover:-translate-y-1 h-[500px]"
     >
       {/* 썸네일 이미지 */}
       <div className="relative aspect-[16/9] w-full overflow-hidden">
@@ -100,16 +100,8 @@ export default function PostCard({
           {title}
         </h2>
 
-        {/* 내용 미리보기 */}
-        <div className="prose prose-sm max-w-none mb-4">
-          <div className="line-clamp-3 text-gray-600">
-            {plainDescription}
-          </div>
-        </div>
-
         {/* 메타 정보 */}
         <div className="flex justify-between items-center text-sm">
-          <span className="text-gray-400">{formattedDate}</span>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1.5">
               <FaEye className="w-3.5 h-3.5 text-gray-400" />

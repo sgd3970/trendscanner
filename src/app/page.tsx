@@ -66,13 +66,10 @@ export default function HomePage() {
         const coupangData = await coupangResponse.json();
         setCoupangPosts(coupangData.slice(0, 6));
 
-        // 모든 포스트의 키워드 수집 및 랜덤 선택
-        const allKeywords = [...trendData, ...coupangData].flatMap(post => post.keywords);
-        const uniqueKeywords = [...new Set(allKeywords)];
-        const randomKeywords = uniqueKeywords
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 5);
-        setKeywords(randomKeywords);
+        // 최신 트렌드 키워드 가져오기
+        const keywordsResponse = await fetch('/api/keywords/trend');
+        const keywordsData = await keywordsResponse.json();
+        setKeywords(keywordsData.keywords || []);
       } catch (error) {
         console.error('포스트 불러오기 실패:', error);
       }
