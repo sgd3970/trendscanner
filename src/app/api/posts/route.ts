@@ -5,15 +5,20 @@ import mongoose from 'mongoose';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category');
+
     await connectDB();
     const db = mongoose.connection.db;
     if (!db) {
       throw new Error('데이터베이스 연결에 실패했습니다.');
     }
 
-    const posts = await db.collection('posts').find().sort({ createdAt: -1 }).toArray();
+    // 카테고리 필터 적용
+    const query = category ? { category } : {};
+    const posts = await db.collection('posts').find(query).sort({ createdAt: -1 }).toArray();
 
     return NextResponse.json(
       posts.map(post => ({
@@ -27,7 +32,7 @@ export async function GET() {
         imageUrl: post.imageUrl || undefined,
         gptImageUrl: post.gptImageUrl || undefined,
         featuredImage: post.featuredImage || undefined,
-        category: post.source || 'trend'  // source 필드를 category로 사용
+        category: post.category || 'trend'
       }))
     );
   } catch (error) {
