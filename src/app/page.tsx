@@ -100,9 +100,9 @@ export default function HomePage() {
               트렌드 뉴스 전체보기 →
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 h-[500px]">
             {trendPosts.map((post) => (
-              <div key={post._id} className="w-full">
+              <div key={post._id} className="w-full h-full">
                 <PostCard
                   id={post._id}
                   title={post.title}
@@ -130,9 +130,9 @@ export default function HomePage() {
               쿠팡 리뷰 전체보기 →
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 h-[500px]">
             {coupangPosts.map((post) => (
-              <div key={post._id} className="w-full">
+              <div key={post._id} className="w-full h-full">
                 <PostCard
                   id={post._id}
                   title={post.title}

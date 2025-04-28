@@ -57,7 +57,7 @@ export default function PostCard({
   return (
     <Link
       href={`/posts/${id}`}
-      className="group block bg-white rounded-xl border border-gray-100 hover:border-blue-100 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 overflow-hidden transform hover:-translate-y-1 h-[500px]"
+      className="group block bg-white rounded-xl border border-gray-100 hover:border-blue-100 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 overflow-hidden transform hover:-translate-y-1 h-full flex flex-col"
     >
       {/* 썸네일 이미지 */}
       <div className="relative aspect-[16/9] w-full overflow-hidden">
@@ -82,9 +82,9 @@ export default function PostCard({
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-4 flex-1 flex flex-col">
         {/* 키워드 태그 */}
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-2">
           {keywords.map((keyword) => (
             <span
               key={keyword}
@@ -96,12 +96,12 @@ export default function PostCard({
         </div>
 
         {/* 제목 */}
-        <h2 className="text-xl font-bold mb-2 text-gray-800 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2">
+        <h2 className="text-lg font-bold mb-2 text-gray-800 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2">
           {title}
         </h2>
 
         {/* 메타 정보 */}
-        <div className="flex justify-between items-center text-sm">
+        <div className="flex justify-between items-center text-sm mt-auto">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1.5">
               <FaEye className="w-3.5 h-3.5 text-gray-400" />
