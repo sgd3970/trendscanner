@@ -21,6 +21,7 @@ export default function TrendsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [visiblePosts, setVisiblePosts] = useState<number>(6);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -28,12 +29,49 @@ export default function TrendsPage() {
 
   const fetchPosts = async () => {
     try {
+      console.log('Fetching trend posts...');
       const response = await fetch('/api/posts?category=trend');
+      console.log('API Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: errorData
+        });
+        throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
+      }
+
       const data = await response.json();
-      setPosts(data);
-      setLoading(false);
-    } catch (error) {
-      console.error('포스트 불러오기 실패:', error);
+      console.log('Received posts data:', {
+        dataType: typeof data,
+        isArray: Array.isArray(data),
+        length: Array.isArray(data) ? data.length : 'N/A'
+      });
+
+      if (Array.isArray(data)) {
+        data.forEach((post, index) => {
+          console.log(`Post ${index + 1}:`, {
+            id: post._id,
+            title: post.title,
+            category: post.category,
+            imageUrl: post.imageUrl,
+            featuredImage: post.featuredImage
+          });
+        });
+        setPosts(data);
+      } else {
+        console.error('Unexpected data format:', data);
+        throw new Error('포스트 데이터 형식이 올바르지 않습니다.');
+      }
+    } catch (error: unknown) {
+      console.error('Error fetching posts:', {
+        message: error instanceof Error ? error.message : '알 수 없는 에러가 발생했습니다.',
+        error
+      });
+      setError(error instanceof Error ? error.message : '포스트를 불러오는데 실패했습니다.');
+    } finally {
       setLoading(false);
     }
   };
