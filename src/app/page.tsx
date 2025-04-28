@@ -101,11 +101,11 @@ export default function HomePage() {
             </Link>
           </div>
           <div 
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 overflow-y-auto"
-            style={{ height: '500px' }}
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2"
+            style={{ height: '500px', maxHeight: '500px' }}
           >
             {trendPosts.map((post) => (
-              <div key={post._id} className="w-full h-full">
+              <div key={post._id} className="w-full h-full" style={{ maxHeight: '500px' }}>
                 <PostCard
                   id={post._id}
                   title={post.title}
@@ -134,11 +134,11 @@ export default function HomePage() {
             </Link>
           </div>
           <div 
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 overflow-y-auto"
-            style={{ height: '500px' }}
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2"
+            style={{ height: '500px', maxHeight: '500px' }}
           >
             {coupangPosts.map((post) => (
-              <div key={post._id} className="w-full h-full">
+              <div key={post._id} className="w-full h-full" style={{ maxHeight: '500px' }}>
                 <PostCard
                   id={post._id}
                   title={post.title}
