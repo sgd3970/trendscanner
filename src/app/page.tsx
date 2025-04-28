@@ -100,12 +100,9 @@ export default function HomePage() {
               트렌드 뉴스 전체보기 →
             </Link>
           </div>
-          <div 
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2"
-            style={{ height: '500px', maxHeight: '500px' }}
-          >
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 h-[300px]">
             {trendPosts.map((post) => (
-              <div key={post._id} className="w-full h-full" style={{ maxHeight: '500px' }}>
+              <div key={post._id} className="w-full">
                 <PostCard
                   id={post._id}
                   title={post.title}
@@ -133,12 +130,9 @@ export default function HomePage() {
               쿠팡 리뷰 전체보기 →
             </Link>
           </div>
-          <div 
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2"
-            style={{ height: '500px', maxHeight: '500px' }}
-          >
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 h-[500px] overflow-y-auto">
             {coupangPosts.map((post) => (
-              <div key={post._id} className="w-full h-full" style={{ maxHeight: '500px' }}>
+              <div key={post._id} className="w-full">
                 <PostCard
                   id={post._id}
                   title={post.title}
