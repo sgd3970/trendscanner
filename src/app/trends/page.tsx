@@ -1,22 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { FaRegClock, FaRegEye } from 'react-icons/fa';
+import PostCard from '@/components/PostCard';
 
 interface Post {
   _id: string;
   title: string;
   content: string;
-  thumbnail: string;
-  category: string;
-  views: number;
   createdAt: string;
+  views: number;
+  likes: number;
   imageUrl?: string;
   gptImageUrl?: string;
   featuredImage?: { url: string };
-  images?: string[];
+  category: string;
+  keywords: string[];
 }
 
 export default function TrendsPage() {
@@ -44,15 +42,6 @@ export default function TrendsPage() {
     setVisiblePosts((prev) => prev + 6);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-24">
@@ -73,32 +62,18 @@ export default function TrendsPage() {
         {/* 포스트 그리드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {posts.slice(0, visiblePosts).map((post) => (
-            <Link
+            <PostCard
               key={post._id}
-              href={`/trendposts/${post._id}`}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200"
-            >
-              <div className="relative h-48">
-                <Image
-                  src={post.images?.[0] || post.imageUrl || post.gptImageUrl || post.featuredImage?.url || '/placeholder.jpg'}
-                  alt={post.title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-4">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
-                  {post.title}
-                </h2>
-                <p className="text-gray-600 mb-4 line-clamp-2">{post.content}</p>
-                <div className="flex items-center text-sm text-gray-500">
-                  <FaRegClock className="mr-1" />
-                  <span className="mr-4">{formatDate(post.createdAt)}</span>
-                  <FaRegEye className="mr-1" />
-                  <span>{post.views}</span>
-                </div>
-              </div>
-            </Link>
+              id={post._id}
+              title={post.title}
+              description={post.content.substring(0, 150)}
+              createdAt={post.createdAt}
+              views={post.views}
+              likes={post.likes}
+              category={post.category}
+              thumbnailUrl={post.imageUrl || post.gptImageUrl || post.featuredImage?.url}
+              keywords={post.keywords}
+            />
           ))}
         </div>
 
