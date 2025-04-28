@@ -71,36 +71,39 @@ export default function TrendsPage() {
       <div className="container mx-auto px-4">
         <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">트렌드 뉴스</h1>
         
-        {/* 포스트 그리드 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-8 justify-items-center">
-          {posts.slice(0, visiblePosts).map((post) => (
-            <div key={post._id} className="w-full max-w-[250px]">
-              <PostCard
-                id={post._id}
-                title={post.title}
-                description={post.content.substring(0, 150)}
-                createdAt={post.createdAt}
-                views={post.views}
-                likes={post.likes}
-                category={post.category}
-                thumbnailUrl={post.imageUrl || post.gptImageUrl || post.featuredImage?.url}
-                keywords={post.keywords}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* 더보기 버튼 */}
-        {visiblePosts < posts.length && (
-          <div className="flex justify-center mb-12">
-            <button
-              onClick={handleLoadMore}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              더보기
-            </button>
+        {/* 포스트 그리드 컨테이너 */}
+        <div className="max-w-[1200px] mx-auto">
+          {/* 포스트 그리드 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {posts.slice(0, visiblePosts).map((post) => (
+              <div key={post._id} className="w-full">
+                <PostCard
+                  id={post._id}
+                  title={post.title}
+                  description={post.content.substring(0, 150)}
+                  createdAt={post.createdAt}
+                  views={post.views}
+                  likes={post.likes}
+                  category={post.category}
+                  thumbnailUrl={post.imageUrl || post.gptImageUrl || post.featuredImage?.url}
+                  keywords={post.keywords}
+                />
+              </div>
+            ))}
           </div>
-        )}
+
+          {/* 더보기 버튼 */}
+          {visiblePosts < posts.length && (
+            <div className="flex justify-center mb-12">
+              <button
+                onClick={handleLoadMore}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                더보기
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
