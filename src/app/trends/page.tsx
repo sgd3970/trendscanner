@@ -72,9 +72,9 @@ export default function TrendsPage() {
         <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">트렌드 뉴스</h1>
         
         {/* 포스트 그리드 컨테이너 */}
-        <div className="max-w-[1200px] mx-auto">
+        <div className="w-full max-w-[1000px] mx-auto px-4 sm:px-6">
           {/* 포스트 그리드 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {posts.slice(0, visiblePosts).map((post) => (
               <div key={post._id} className="w-full">
                 <PostCard
