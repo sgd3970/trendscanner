@@ -154,7 +154,7 @@ export default function HomePage() {
 
         {/* 섹션 4: 오늘의 키워드 */}
         <section className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">오늘의 키워드</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">오늘의 트렌드 키워드</h2>
           <div className="flex flex-wrap gap-3">
             {keywords.map((keyword, index) => (
               <span
