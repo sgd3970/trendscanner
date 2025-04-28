@@ -48,150 +48,125 @@ interface Post {
   category: string;
 }
 
-export default function Home() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [visibleTrendPosts, setVisibleTrendPosts] = useState(4);
-  const [visibleCoupangPosts, setVisibleCoupangPosts] = useState(2);
+export default function HomePage() {
+  const [trendPosts, setTrendPosts] = useState<Post[]>([]);
+  const [coupangPosts, setCoupangPosts] = useState<Post[]>([]);
+  const [keywords, setKeywords] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch('/api/posts');
-        if (!response.ok) {
-          throw new Error('포스트를 불러오는데 실패했습니다.');
-        }
-        const data = await response.json();
-        setPosts(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
-      } finally {
-        setLoading(false);
+        // 트렌드 뉴스 가져오기
+        const trendResponse = await fetch('/api/posts?category=trend');
+        const trendData = await trendResponse.json();
+        setTrendPosts(trendData.slice(0, 6));
+
+        // 쿠팡 리뷰 가져오기
+        const coupangResponse = await fetch('/api/posts?category=coupang');
+        const coupangData = await coupangResponse.json();
+        setCoupangPosts(coupangData.slice(0, 6));
+
+        // 모든 포스트의 키워드 수집 및 랜덤 선택
+        const allKeywords = [...trendData, ...coupangData].flatMap(post => post.keywords);
+        const uniqueKeywords = [...new Set(allKeywords)];
+        const randomKeywords = uniqueKeywords
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 5);
+        setKeywords(randomKeywords);
+      } catch (error) {
+        console.error('포스트 불러오기 실패:', error);
       }
     };
 
     fetchPosts();
   }, []);
 
-  const filteredPosts = posts.filter(post => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      post.title.toLowerCase().includes(searchLower) ||
-      post.content.toLowerCase().includes(searchLower) ||
-      post.keywords.some(keyword => keyword.toLowerCase().includes(searchLower))
-    );
-  });
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="w-full max-w-[1000px] mx-auto px-4 sm:px-6 py-12">
+        {/* 섹션 1: 소개 */}
+        <section className="mb-16">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">트렌드스캐너에 오신 것을 환영합니다</h1>
+          <p className="text-lg text-gray-600">
+            최신 트렌드와 리뷰를 한눈에 확인하세요. 트렌드스캐너가 엄선한 콘텐츠를 제공합니다.
+          </p>
+        </section>
 
-  const trendPosts = filteredPosts.filter(post => post.category === 'trend');
-  const coupangPosts = filteredPosts.filter(post => post.category === 'coupang');
-
-  const handleLoadMore = () => {
-    setVisibleTrendPosts(prev => prev + 4);
-    setVisibleCoupangPosts(prev => prev + 2);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="container mx-auto px-4 pt-16 sm:pt-20 pb-8 sm:pb-12">
-          <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
-            <SearchInput
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="제목, 내용, 키워드로 검색"
-            />
+        {/* 섹션 2: 트렌드 뉴스 */}
+        <section className="mb-16">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">트렌드 뉴스</h2>
+            <Link 
+              href="/trends"
+              className="text-blue-600 hover:text-blue-800 font-semibold"
+            >
+              트렌드 뉴스 전체보기 →
+            </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {[...Array(8)].map((_, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                <div className="relative w-full pt-[56.25%] bg-gray-200 animate-pulse" />
-                <div className="p-4">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-2" />
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {trendPosts.map((post) => (
+              <div key={post._id} className="w-full">
+                <PostCard
+                  id={post._id}
+                  title={post.title}
+                  description={post.content.substring(0, 150)}
+                  createdAt={post.createdAt}
+                  views={post.views}
+                  likes={post.likes}
+                  category={post.category}
+                  thumbnailUrl={post.imageUrl || post.gptImageUrl || post.featuredImage?.url}
+                  keywords={post.keywords}
+                />
               </div>
             ))}
           </div>
-        </main>
-      </div>
-    );
-  }
+        </section>
 
-  if (error) {
-    return <div className="text-center text-red-500 py-8">{error}</div>;
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="container mx-auto px-4 pt-16 sm:pt-20 pb-8 sm:pb-12">
-        <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="제목, 내용, 키워드로 검색"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {/* Trend 포스트 (1, 2열) */}
-          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {trendPosts.slice(0, visibleTrendPosts).map(post => (
-              <PostCard
-                key={post._id}
-                id={post._id}
-                title={post.title}
-                description={post.content.substring(0, 150)}
-                createdAt={post.createdAt}
-                keywords={post.keywords}
-                views={post.views}
-                likes={post.likes}
-                category={post.category}
-                thumbnailUrl={post.thumbnailUrl || post.imageUrl || post.gptImageUrl || post.featuredImage?.url}
-              />
-            ))}
-          </div>
-
-          {/* Coupang 포스트 (3열) */}
-          <div className="grid grid-cols-1 gap-4">
-            {coupangPosts.slice(0, visibleCoupangPosts).map(post => (
-              <PostCard
-                key={post._id}
-                id={post._id}
-                title={post.title}
-                description={post.content.substring(0, 150)}
-                createdAt={post.createdAt}
-                keywords={post.keywords}
-                views={post.views}
-                likes={post.likes}
-                category={post.category}
-                thumbnailUrl={post.thumbnailUrl || post.imageUrl || post.gptImageUrl || post.featuredImage?.url}
-              />
-            ))}
-          </div>
-        </div>
-
-        {(trendPosts.length > visibleTrendPosts || coupangPosts.length > visibleCoupangPosts) && (
-          <div className="mt-8 text-center">
-            <button
-              onClick={handleLoadMore}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        {/* 섹션 3: 쿠팡 리뷰 */}
+        <section className="mb-16">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">쿠팡 리뷰</h2>
+            <Link 
+              href="/reviews"
+              className="text-blue-600 hover:text-blue-800 font-semibold"
             >
-              더보기
-            </button>
+              쿠팡 리뷰 전체보기 →
+            </Link>
           </div>
-        )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {coupangPosts.map((post) => (
+              <div key={post._id} className="w-full">
+                <PostCard
+                  id={post._id}
+                  title={post.title}
+                  description={post.content.substring(0, 150)}
+                  createdAt={post.createdAt}
+                  views={post.views}
+                  likes={post.likes}
+                  category={post.category}
+                  thumbnailUrl={post.imageUrl || post.gptImageUrl || post.featuredImage?.url}
+                  keywords={post.keywords}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
 
-        {filteredPosts.length === 0 && (
-          <div className="text-center text-gray-500 py-8">
-            검색 결과가 없습니다.
+        {/* 섹션 4: 오늘의 키워드 */}
+        <section className="bg-white rounded-lg shadow-lg p-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">오늘의 키워드</h2>
+          <div className="flex flex-wrap gap-3">
+            {keywords.map((keyword, index) => (
+              <span
+                key={index}
+                className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+              >
+                #{keyword}
+              </span>
+            ))}
           </div>
-        )}
-      </main>
+        </section>
+      </div>
     </div>
   );
 }
