@@ -16,8 +16,9 @@ export async function GET(
       throw new Error('데이터베이스 연결에 실패했습니다.');
     }
 
-    const post = await db.collection('trendposts').findOne({ 
-      _id: new ObjectId(id)
+    const post = await db.collection('posts').findOne({ 
+      _id: new ObjectId(id),
+      category: 'trend'
     });
 
     if (!post) {

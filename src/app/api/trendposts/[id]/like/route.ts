@@ -17,8 +17,11 @@ export async function POST(
       throw new Error('데이터베이스 연결에 실패했습니다.');
     }
 
-    const result = await db.collection('trendposts').updateOne(
-      { _id: new ObjectId(id) },
+    const result = await db.collection('posts').updateOne(
+      { 
+        _id: new ObjectId(id),
+        category: 'trend'
+      },
       { $inc: { likes: action === 'like' ? 1 : -1 } }
     );
 
