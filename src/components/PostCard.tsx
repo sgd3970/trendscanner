@@ -57,7 +57,7 @@ export default function PostCard({
   return (
     <Link
       href={`/posts/${id}`}
-      className="group block bg-white rounded-xl border border-gray-100 hover:border-blue-100 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 overflow-hidden transform hover:-translate-y-1 h-[500px] flex flex-col"
+      className="group block bg-white rounded-xl border border-gray-100 hover:border-blue-100 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 overflow-hidden transform hover:-translate-y-1 h-full flex flex-col"
     >
       {/* 썸네일 이미지 */}
       <div className="relative w-full h-[250px] overflow-hidden">
