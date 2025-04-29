@@ -107,7 +107,7 @@ export default function HomePage() {
                 <PostCard
                   id={post._id}
                   title={post.title}
-                  description={post.content.substring(0, 150)}
+                  description={post.content.substring(0, 15)}
                   createdAt={post.createdAt}
                   views={post.views}
                   likes={post.likes}
