@@ -18,7 +18,23 @@ export async function GET(request: Request) {
     }
 
     const query = category ? { category } : {};
-    const posts = await db.collection('posts').find(query).sort({ createdAt: -1 }).toArray();
+    const posts = await db.collection('posts')
+      .find(query)
+      .project({
+        _id: 1,
+        title: 1,
+        content: 1,
+        createdAt: 1,
+        views: 1,
+        likes: 1,
+        imageUrl: 1,
+        gptImageUrl: 1,
+        featuredImage: 1,
+        category: 1,
+        keywords: 1
+      })
+      .sort({ createdAt: -1 })
+      .toArray();
 
     const mappedPosts = posts.map(post => ({
       _id: post._id?.toString() || '',
@@ -35,7 +51,10 @@ export async function GET(request: Request) {
       images: Array.isArray(post.images) ? post.images : []
     }));
 
-    return NextResponse.json(mappedPosts);
+    const response = NextResponse.json(mappedPosts);
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=30');
+    
+    return response;
   } catch (error) {
     return NextResponse.json(
       { error: '포스트를 불러오는데 실패했습니다.' },
